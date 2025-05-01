@@ -1,0 +1,15 @@
+[roles.default]
+description = "Default role"
+inherits = []
+permissions = [
+    { action = "read", resource = "devices" },
+]
+
+[roles.admin]
+description = "Admin role"
+inherits = []
+permissions = [
+    { action = "read", resource = "devices" },
+    { action = "write", resource = "devices" },
+    { action = "delete", resource = "devices" },
+]

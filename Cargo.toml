@@ -1,0 +1,19 @@
+[workspace]
+members = ["api", "cli"]
+resolver = "2"
+
+[workspace.package]
+description = "Teton's Fleet Management System. It provides automation to easily deploy and monitor applications at scale."
+version = "0.2.0"
+
+repository = "https://github.com/teton-ai/smith"
+authors = [
+    "Luis Silva <luis@teton.ai>",
+    "Roland Kajatin <roland@teton.ai>",
+    "Alvaro Molina <alvaro@teton.ai>",
+    "Christian Bender <cbender@teton.ai>",
+]
+license = "Apache-2.0"
+
+[workspace.dependencies]
+anyhow = "1.0.98"

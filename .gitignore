@@ -1,0 +1,10 @@
+**/target/
+**/release/
+build-info
+*.tar.gz
+magic.toml
+/rug
+fleet.sql
+volumes
+.idea
+.env
