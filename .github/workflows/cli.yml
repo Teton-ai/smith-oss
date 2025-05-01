@@ -1,0 +1,83 @@
+name: cli
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - '*'
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: 'build ${{ matrix.target }}'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+#          - os: ubuntu-24.04-arm
+#            target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+#          - os: windows-latest
+#            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dsherret/rust-toolchain-file@v1
+
+      - name: Install ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+
+      - name: Install libdbus-1-dev and pkg-config
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: sudo apt install libdbus-1-dev pkg-config
+
+      - name: Build Release
+        run: cargo build --package cli --target ${{ matrix.target }} --release
+
+      - name: Zip (Linux/MacOS)
+        if: matrix.os != 'windows-latest'
+        run: zip -j sm-${{ matrix.target }}.zip target/${{ matrix.target }}/release/sm
+
+#      - name: Zip (Windows)
+#        if: matrix.os == 'windows-latest'
+#        run: Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.target }}/release/sm.exe -DestinationPath sm-${{ matrix.target }}.zip
+
+      - name: Upload Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: sm-${{ matrix.target }}
+          path: sm-${{ matrix.target }}.zip
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sm-*
+          merge-multiple: true
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            sm-x86_64-unknown-linux-gnu.zip
+            sm-x86_64-apple-darwin.zip
+            sm-aarch64-apple-darwin.zip
