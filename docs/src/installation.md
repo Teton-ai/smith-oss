@@ -1,6 +1,6 @@
 # Getting Started
 
-Installing the CLI
+Installing the Smith CLI (Command Line Interface)
 
 ## Download and install
 
@@ -18,4 +18,4 @@ After installing the `sm` CLI, you can test your installation by running the fol
 sm --version
 ```
 
-Use `sm help`to see help text documenting Smith's flags and usage.
+Use `sm help` to see help text documenting Smith's flags and usage.
