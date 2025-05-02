@@ -27,6 +27,10 @@ jobs:
 
       - name: Install mdBook
         run: cargo install --version ${MDBOOK_VERSION} mdbook
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
