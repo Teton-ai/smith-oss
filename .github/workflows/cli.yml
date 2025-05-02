@@ -19,8 +19,8 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-#          - os: ubuntu-24.04-arm
-#            target: aarch64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
           - os: macos-latest
             target: x86_64-apple-darwin
           - os: macos-latest
@@ -79,5 +79,6 @@ jobs:
         with:
           files: |
             sm-x86_64-unknown-linux-gnu.zip
+            sm-aarch64-unknown-linux-gnu.zip
             sm-x86_64-apple-darwin.zip
             sm-aarch64-apple-darwin.zip
