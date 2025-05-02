@@ -1,8 +1,8 @@
 [package]
 name = "cli"
-edition = "2024"
-description = "Smith Command Line Interface (CLI)"
 version.workspace = true
+description = "Smith Command Line Interface (CLI)"
+edition.workspace = true
 repository.workspace = true
 authors.workspace = true
 license.workspace = true
