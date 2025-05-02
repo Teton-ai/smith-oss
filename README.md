@@ -1,4 +1,6 @@
-# Smith (Agent Smith)
+# Smith (Agent Smith) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/teton-ai/smith-oss?sort=semver)
+
+<img src="https://docs.smith.teton.ai/logo.png" width="150" style="border-radius: 12%;">
 
 **Smith**, also known as Agent Smith, is Teton's Fleet Management System. It provides automation to easily deploy and monitor applications at scale.
 
