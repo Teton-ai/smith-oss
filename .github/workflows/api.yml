@@ -31,7 +31,7 @@ jobs:
       - name: Install jq
         uses: dcarbone/install-jq-action@v3.1.1
 
-      - name: set api version
+      - name: api version var
         run: |
           API_VERSION=$(cargo metadata --format-version=1 | jq -r '.packages[] | select(.name == "api") | .version')
           echo "API_VERSION=${API_VERSION}" >> "$GITHUB_ENV"
