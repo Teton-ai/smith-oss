@@ -275,8 +275,6 @@ async fn main() -> anyhow::Result<()> {
                 if !overview_debug {
                     let mut ssh =
                         tunnel::Session::connect(username, password, port as u16, &config).await?;
-***REMOVED***
-***REMOVED***
                     println!("Connected");
 
                     let code = {
