@@ -1,0 +1,26 @@
+[package]
+name = "smith-updater"
+version.workspace = true
+description = "Smith Daemon Updater Service"
+edition.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+smith = { path = "../smithd" }
+
+tokio = { version = "1.40" }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+clap = { version = "4.5.27", features = ["derive"] }
+
+
+[package.metadata.deb]
+maintainer-scripts = "debian/"
+assets = [["target/release/smith-updater", "/usr/bin/smith-updater", "755"]]
+
+[package.metadata.deb.systemd-units]
+unit-name = "smith-updater"
+enable = false
+start = false
