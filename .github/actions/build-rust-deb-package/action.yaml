@@ -1,0 +1,42 @@
+name: "Build Rust Debian Package"
+description: 'Build Rust Debian Package, Github Action'
+author: Alvaro Molina <alvaro@teton.ai>
+
+branding:
+  icon: 'play-circle'
+  color: 'blue'
+
+inputs:
+  package-name:
+    description: 'Package Name'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install build-essential
+      run: sudo apt-get install pkg-config build-essential libssl-dev rubygems -y
+      shell: bash
+
+    - name: Install Rust
+      uses: dsherret/rust-toolchain-file@v1
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        cache-all-crates: true
+    - name: Install cargo deb
+      run: cargo install cargo-deb
+      shell: bash
+    - name: Build ${{ inputs.package-name }}
+      run: |
+        output=$(cargo deb -p ${{ inputs.package-name }} --deb-revision "")
+        
+        PACKAGE_FILE=$(echo "$output" | grep -oP '.*\.deb')
+        echo "PACKAGE_FILE=${PACKAGE_FILE}" >> "$GITHUB_ENV"
+        
+        PACKAGE_NAME=$(basename "${PACKAGE_FILE}")
+        echo "PACKAGE_NAME=${PACKAGE_NAME}" >> "$GITHUB_ENV"
+        
+        PACKAGE_VERSION=$(dpkg-deb --field "${PACKAGE_FILE}" Version)
+        echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> "$GITHUB_ENV"
+      shell: bash
