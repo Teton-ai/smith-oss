@@ -25,11 +25,10 @@ runs:
       with:
         cache-all-crates: true
     - name: Install cargo deb
-      run: cargo install cargo-deb --force
+      run: cargo install cargo-deb
       shell: bash
     - name: Build ${{ inputs.package-name }}
       run: |
-        cargo clean
         output=$(cargo deb -p ${{ inputs.package-name }} --deb-revision "")
 
         PACKAGE_FILE=$(echo "$output" | grep -oP '.*\.deb')
