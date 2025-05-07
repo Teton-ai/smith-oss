@@ -1,10 +1,10 @@
 [workspace]
-members = ["api", "cli"]
+members = ["api", "cli", "smithd", "updater"]
 resolver = "2"
 
 [workspace.package]
 description = "Teton's Fleet Management System. It provides automation to easily deploy and monitor applications at scale."
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 
 repository = "https://github.com/teton-ai/smith"
