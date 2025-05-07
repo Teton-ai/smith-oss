@@ -6,7 +6,7 @@ on:
     tags:
       - "*"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 concurrency:
   group: deb-${{ github.sha }}
@@ -15,9 +15,12 @@ permissions:
   contents: read
   actions: read
 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   build-and-release:
-    name: 'build and release ${{ matrix.package }} ${{ matrix.arch }} deb'
+    name: "build and release ${{ matrix.package }} ${{ matrix.arch }} deb"
     strategy:
       matrix:
         package: [smith-updater]
