@@ -1,14 +1,14 @@
 name: "Build Rust Debian Package"
-description: 'Build Rust Debian Package, Github Action'
+description: "Build Rust Debian Package, Github Action"
 author: Alvaro Molina <alvaro@teton.ai>
 
 branding:
-  icon: 'play-circle'
-  color: 'blue'
+  icon: "play-circle"
+  color: "blue"
 
 inputs:
   package-name:
-    description: 'Package Name'
+    description: "Package Name"
     required: true
 
 runs:
@@ -25,18 +25,19 @@ runs:
       with:
         cache-all-crates: true
     - name: Install cargo deb
-      run: cargo install cargo-deb
+      run: cargo install cargo-deb --force
       shell: bash
     - name: Build ${{ inputs.package-name }}
       run: |
+        cargo clean
         output=$(cargo deb -p ${{ inputs.package-name }} --deb-revision "")
-        
+
         PACKAGE_FILE=$(echo "$output" | grep -oP '.*\.deb')
         echo "PACKAGE_FILE=${PACKAGE_FILE}" >> "$GITHUB_ENV"
-        
+
         PACKAGE_NAME=$(basename "${PACKAGE_FILE}")
         echo "PACKAGE_NAME=${PACKAGE_NAME}" >> "$GITHUB_ENV"
-        
+
         PACKAGE_VERSION=$(dpkg-deb --field "${PACKAGE_FILE}" Version)
         echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> "$GITHUB_ENV"
       shell: bash
