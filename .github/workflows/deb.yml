@@ -15,9 +15,6 @@ permissions:
   contents: read
   actions: read
 
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-
 jobs:
   build-and-release:
     name: "build and release ${{ matrix.package }} ${{ matrix.arch }} deb"
