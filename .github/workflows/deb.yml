@@ -27,9 +27,9 @@ jobs:
         arch: [amd64, arm64]
         include:
           - arch: amd64
-            os: ubuntu-22.04
+            os: ubuntu-24.04
           - arch: arm64
-            os: ubuntu-24.04-[ self-hosted, linux, arm64, aws, ec2, ubuntu-20.04 ]
+            os: [self-hosted, linux, arm64, aws, ec2, ubuntu-20.04]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
