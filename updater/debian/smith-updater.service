@@ -1,0 +1,13 @@
+[Unit]
+Description=Agent Smith Updater
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/smith-updater
+WorkingDirectory=/etc/smith
+Environment="RUST_LOG=INFO"
+
+[Install]
+WantedBy=multi-user.target
