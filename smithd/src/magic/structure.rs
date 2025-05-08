@@ -126,11 +126,6 @@ impl MagicFile {
         Ok((magic_file, Some(PathBuf::from(location))))
     }
 
-    pub fn load_from_str(contents: &str) -> Result<Self> {
-        toml::from_str(contents)
-            .with_context(|| format!("Failed to parse magic file: {}", contents))
-    }
-
     pub async fn write_to_file(&self, path: &str) -> Result<()> {
         let string = toml::to_string_pretty(&self)?;
         let mut file = File::create(path).await?;
@@ -141,10 +136,6 @@ impl MagicFile {
 
     pub fn get_checks(&self) -> Vec<ConfigCheck> {
         self.checks.clone().unwrap_or_default()
-    }
-
-    pub fn get_metrics(&self) -> Vec<ConfigMetric> {
-        self.metrics.clone().unwrap_or_default()
     }
 
     pub fn get_tunnel_details(&self) -> ConfigTunnel {

@@ -1,0 +1,16 @@
+[Unit]
+Description=Agent Smith daemon
+After=network.target
+
+[Service]
+Type=simple
+TimeoutSec=60
+Restart=always
+RestartSec=2
+User=root
+ExecStart=/usr/bin/smithd
+WorkingDirectory=/etc/smith
+Environment="RUST_LOG=INFO"
+
+[Install]
+WantedBy=multi-user.target

@@ -10,15 +10,52 @@ license.workspace = true
 
 [[bin]]
 name = "smithd"
-path = "src/main.rs"
+path = "src/bin/main.rs"
 
 [dependencies]
 anyhow.workspace = true
-
+clap = { version = "4.5", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.40", features = ["full"] }
-tokio-util = "0.7.12"
-toml = "0.8.19"
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tokio-util = "0.7"
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+zbus = "5.6"
+flate2 = "1.0"
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = [
+    "gzip",
+    "json",
+    "multipart",
+    "stream",
+] }
+bore-cli = "0.5"
+pnet = "0.35"
+walkdir = "2.5"
+chrono = { version = "0.4", features = ["serde"] }
+governor = "0.10"
+futures = "0.3"
+
+[package.metadata.deb]
+maintainer-scripts = "debian/"
+assets = [
+    [
+        "target/release/smithd",
+        "/usr/bin/smithd",
+        "755",
+    ],
+    [
+        "src/dbus/smithd.conf",
+        "/etc/dbus-1/system.d/smithd.conf",
+        "0644",
+    ],
+]
+
+[package.metadata.deb.systemd-units]
+unit-name = "smithd"
+enable = true
+start = true
+restart-after-upgrade = true
+stop-on-upgrade = false

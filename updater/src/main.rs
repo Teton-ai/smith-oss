@@ -1,6 +1,6 @@
 use clap::Parser;
-use smith::actors::ShutdownHandler;
-use smith::actors::magic::MagicHandle;
+use smith::magic::MagicHandle;
+use smith::shutdown::ShutdownHandler;
 use tokio::time;
 use tracing::{error, info};
 

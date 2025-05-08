@@ -6,7 +6,7 @@ on:
     tags:
       - "*"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 concurrency:
   group: deb-${{ github.sha }}
@@ -17,10 +17,10 @@ permissions:
 
 jobs:
   build-and-release:
-    name: 'build and release ${{ matrix.package }} ${{ matrix.arch }} deb'
+    name: "build and release ${{ matrix.package }} ${{ matrix.arch }} deb"
     strategy:
       matrix:
-        package: [smith-updater]
+        package: [smith, smith-updater]
         arch: [amd64, arm64]
         include:
           - arch: amd64
