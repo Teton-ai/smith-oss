@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+# Create the /etc/smith folder if it doesn't exist
+if [ ! -d /etc/smith ]; then
+  mkdir /etc/smith
+  echo "/etc/smith folder created."
+fi
+
+#DEBHELPER#

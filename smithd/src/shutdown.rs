@@ -2,12 +2,10 @@ use tokio::{select, sync::mpsc};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
 
-pub mod magic;
-
 #[derive(Clone)]
 pub struct ShutdownSignals {
     pub token: CancellationToken,
-    pub channel: mpsc::Sender<()>,
+    pub _channel: mpsc::Sender<()>,
 }
 
 pub struct ShutdownHandler {
@@ -28,7 +26,7 @@ impl ShutdownHandler {
         Self {
             shutdown_signals: ShutdownSignals {
                 token,
-                channel: shutdown,
+                _channel: shutdown,
             },
             shutdown_wait,
         }
@@ -39,11 +37,11 @@ impl ShutdownHandler {
     }
 
     pub async fn wait(mut self) {
-        // create a signal stream to handle SIGINT (aka ctrl+c)
+        // create signal stream to handle SIGINT (aka ctrl+c)
         let mut sigint_sink =
             tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt()).unwrap();
 
-        // create a signal stream to handle SIGTERM (aka how systemd stops this)
+        // create signal stream to handle SIGTERM (aka how systemd stops this)
         let mut sigterm_sink =
             tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).unwrap();
 

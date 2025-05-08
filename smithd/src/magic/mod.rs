@@ -1,6 +1,6 @@
 pub mod structure;
 
-use super::ShutdownSignals;
+use crate::shutdown::ShutdownSignals;
 use std::path::PathBuf;
 use tokio::sync::{mpsc, oneshot};
 use tracing::{debug, info, warn};
@@ -19,9 +19,6 @@ enum MagicMessage {
     },
     GetChecks {
         sender: oneshot::Sender<Vec<structure::ConfigCheck>>,
-    },
-    GetMetrics {
-        sender: oneshot::Sender<Vec<structure::ConfigMetric>>,
     },
     GetTunnelDetails {
         sender: oneshot::Sender<structure::ConfigTunnel>,
@@ -84,16 +81,6 @@ impl Magic {
                 if let Some(conf) = &self.configuration {
                     debug!("Sending {} checks", conf.get_checks().len());
                     _ = sender.send(conf.get_checks());
-                } else {
-                    _ = sender.send(vec![]);
-                }
-            }
-            MagicMessage::GetMetrics { sender } => {
-                info!("Getting Magic Metrics");
-
-                if let Some(conf) = &self.configuration {
-                    debug!("Sending {} checks", conf.get_checks().len());
-                    _ = sender.send(conf.get_metrics());
                 } else {
                     _ = sender.send(vec![]);
                 }
@@ -281,13 +268,6 @@ impl MagicHandle {
     pub async fn get_checks(&self) -> Vec<structure::ConfigCheck> {
         let (sender, receiver) = oneshot::channel();
         let msg = MagicMessage::GetChecks { sender };
-        _ = self.sender.send(msg).await;
-        receiver.await.unwrap()
-    }
-
-    pub async fn get_metrics(&self) -> Vec<structure::ConfigMetric> {
-        let (sender, receiver) = oneshot::channel();
-        let msg = MagicMessage::GetMetrics { sender };
         _ = self.sender.send(msg).await;
         receiver.await.unwrap()
     }

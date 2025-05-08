@@ -20,7 +20,7 @@ jobs:
     name: "build and release ${{ matrix.package }} ${{ matrix.arch }} deb"
     strategy:
       matrix:
-        package: [smith-updater]
+        package: [smith, smith-updater]
         arch: [amd64, arm64]
         include:
           - arch: amd64
