@@ -21,9 +21,9 @@ else
 fi
 
 if [ $# -eq 0 ]; then
-	sm_uri="https://github.com/Teton-ai/smith-oss/releases/latest/download/sm-${target}.zip"
+	sm_uri="https://github.com/Teton-ai/smith/releases/latest/download/sm-${target}.zip"
 else
-	sm_uri="https://github.com/Teton-ai/smith-oss/releases/latest/download/sm-${target}.zip"
+	sm_uri="https://github.com/Teton-ai/smith/releases/latest/download/sm-${target}.zip"
 fi
 
 smith_install="${SMITH_CLI_INSTALL:-$HOME/.smith}"

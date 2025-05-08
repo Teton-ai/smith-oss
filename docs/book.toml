@@ -11,4 +11,4 @@ src = "src"
 title = "Smith Documentation"
 
 [output.html]
-git-repository-url = "https://github.com/Teton-ai/smith-oss/tree/main/docs"
+git-repository-url = "https://github.com/Teton-ai/smith/tree/main/docs"

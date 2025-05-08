@@ -1,4 +1,4 @@
-# Smith (Agent Smith) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/teton-ai/smith-oss?sort=semver)
+# Smith (Agent Smith) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/teton-ai/smith?sort=semver)
 
 <img src="https://docs.smith.teton.ai/logo.png" width="150" style="border-radius: 12%;">
 
