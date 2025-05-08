@@ -4,7 +4,6 @@ use tracing::{error, info};
 
 pub struct InitialCheck {
     pub name: String,
-    //#[serde(skip_serializing)]
     pub cmd: String,
     pub success: bool,
     pub data: Option<String>,
