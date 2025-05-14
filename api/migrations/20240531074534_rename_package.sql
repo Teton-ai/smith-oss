@@ -1,0 +1,1 @@
+ALTER TABLE package2 RENAME TO package;

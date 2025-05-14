@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use sqlx;
+use sqlx::Type;
 use std::collections::HashMap;
 use std::time;
 use std::time::Duration;
@@ -126,7 +128,8 @@ pub struct DeviceRegistrationResponse {
     pub token: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Type, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[sqlx(type_name = "network_type", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum NetworkType {
     Wifi,
