@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select exists(\n                select 1 from telemetry\n                where\n                    service = 'systemd1'\n                    and serial_number = (select serial_number from device where id = $1)\n                    and data->>'result' != 'done'\n                    and id < $2\n                order by timestamp desc\n                limit 1\n            )",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "38b9ea1e9190c9d83a881a25005cb776dc375342cc0b230f24b25f4455ceb710"
+}
