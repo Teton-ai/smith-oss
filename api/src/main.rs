@@ -146,10 +146,8 @@ async fn start_main_server(config: &'static Config, authorization: Authorization
     let tx_message = Arc::new(Mutex::new(tx_message));
 
     let mut headers = HeaderMap::new();
-    headers.insert(
-        "authorization",
-        config.victoria_metrics_auth_token.parse().unwrap(),
-    );
+    let auth = format!("Basic {}", config.victoria_metrics_auth_token);
+    headers.insert("authorization", auth.parse().unwrap());
     let victoria_client = reqwest::Client::builder()
         .http2_keep_alive_interval(Duration::from_secs(10))
         .http2_keep_alive_timeout(Duration::from_secs(20))
