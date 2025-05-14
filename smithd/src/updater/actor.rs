@@ -165,7 +165,7 @@ impl Actor {
             .await
             .with_context(|| "Failed to get Target Release ID")?;
 
-        let token = self.magic.get_token().await;
+        let token = self.magic.get_token().await.unwrap_or_default();
 
         info!("Checking for updates");
         info!("Target release id: {:?}", target_release_id);
@@ -176,7 +176,7 @@ impl Actor {
         // ask postman for the packages of the target release
         let target_packages = self
             .network
-            .get_release_packages(target_release_id, &token.unwrap_or_default())
+            .get_release_packages(target_release_id, &token)
             .await?;
 
         info!("== Current packages ==");
@@ -210,7 +210,9 @@ impl Actor {
                 info!("Package {} is not installed", target_package.name);
                 up_to_date = false;
                 // we need to install the package
-                self.network.get_package(&target_package.file).await?;
+                self.network
+                    .get_package(&target_package.file, &token)
+                    .await?;
             }
         }
 
@@ -285,7 +287,8 @@ impl Actor {
             {
                 Ok(output) => output,
                 Err(e) => {
-                    bail!("Failed to execute dpkg command for {}: {}", package_name, e);
+                    error!("Failed to execute dpkg command for {}: {}", package_name, e);
+                    continue;
                 }
             };
 

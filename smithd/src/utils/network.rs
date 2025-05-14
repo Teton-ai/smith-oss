@@ -103,7 +103,7 @@ impl NetworkClient {
             .with_context(|| "Failed to Parse JSON respone")
     }
 
-    pub async fn get_package(&self, package_name: &str) -> Result<()> {
+    pub async fn get_package(&self, package_name: &str, token: &str) -> Result<()> {
         let path = env::current_dir()?;
 
         let mut local_packages_folder = path.clone();
@@ -127,6 +127,7 @@ impl NetworkClient {
         let stream = self
             .client
             .get(url)
+            .header("Authorization", format!("Bearer {}", token))
             .timeout(Duration::from_secs(10 * 60))
             .query(&query)
             .send()
