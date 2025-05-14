@@ -1,0 +1,5 @@
+ALTER TABLE release
+    ADD draft BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD yanked BOOLEAN NOT NULL DEFAULT FALSE;
+
+UPDATE release SET draft = FALSE WHERE release.draft IS TRUE;

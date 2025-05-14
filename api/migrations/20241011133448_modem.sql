@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS modem (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    imei TEXT NOT NULL UNIQUE,
+    network_provider TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE device
+    ADD modem_id INT,
+    ADD CONSTRAINT fk_modem FOREIGN KEY (modem_id) REFERENCES modem(id);
