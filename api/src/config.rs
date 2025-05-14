@@ -8,6 +8,7 @@ pub struct Config {
     pub assets_bucket_name: String,
     pub aws_region: String,
     pub sentry_url: Option<String>,
+    pub slack_hook_url: Option<String>,
     pub victoria_metrics_auth_token: String,
 }
 
@@ -23,6 +24,7 @@ impl Config {
                 .context("ASSETS_BUCKET_NAME is required.")?,
             aws_region: env::var("AWS_REGION").context("AWS_REGION is required.")?,
             sentry_url: env::var("SENTRY_URL").ok(),
+            slack_hook_url: env::var("SLACK_HOOK_URL").ok(),
             victoria_metrics_auth_token: env::var("VICTORIA_METRICS_AUTH_TOKEN")
                 .context("VICTORIA_METRICS_AUTH_TOKEN is required.")?,
         })

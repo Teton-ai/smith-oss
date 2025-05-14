@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::db::DeviceWithToken;
 pub(crate) use crate::device::schema::Device;
 use serde_json::{Value, json};
@@ -13,6 +14,7 @@ impl Device {
     pub async fn register_device(
         payload: DeviceRegistration,
         pool: &PgPool,
+        config: &Config,
     ) -> anyhow::Result<DeviceRegistrationResponse, RegistrationError> {
         let mut tx = pool.begin().await?;
 
@@ -69,32 +71,30 @@ impl Device {
                 RegistrationError::FailedToLogInLedger
             })?;
 
-            let slack_hook_url =
-                "https://hooks.slack.com/services/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";
-
-            let message = json!({
-                "text": format!("Device {} registered via API", result.serial_number),
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": format!(
-                                "New device *{}* has registered via the API. Welcome to the fleet! :tada: :hardware:",
-                                result.serial_number,
-                            )
-                        }
-                    },
-                ]
-            });
-
-            let client = reqwest::Client::new();
-            let _res = client
-                .post(slack_hook_url)
-                .header("Content-Type", "application/json")
-                .json(&message)
-                .send()
-                .await;
+            if let Some(slack_hook_url) = &config.slack_hook_url {
+                let message = json!({
+                    "text": format!("Device {} registered via API", result.serial_number),
+                    "blocks": [
+                        {
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": format!(
+                                    "New device *{}* has registered via the API. Welcome to the fleet! :tada: :hardware:",
+                                    result.serial_number,
+                                )
+                            }
+                        },
+                    ]
+                });
+                let client = reqwest::Client::new();
+                let _res = client
+                    .post(slack_hook_url)
+                    .header("Content-Type", "application/json")
+                    .json(&message)
+                    .send()
+                    .await;
+            }
         }
 
         if result.approved == Some(true) {

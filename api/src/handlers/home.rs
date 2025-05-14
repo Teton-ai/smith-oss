@@ -58,7 +58,7 @@ pub async fn register_device(
 ) -> (StatusCode, Json<DeviceRegistrationResponse>) {
     info!("Registering device {:?}", payload);
 
-    let token = crate::device::Device::register_device(payload, &state.pg_pool).await;
+    let token = crate::device::Device::register_device(payload, &state.pg_pool, state.config).await;
 
     match token {
         Ok(token) => (StatusCode::OK, Json(token)),
