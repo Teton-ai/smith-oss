@@ -1,5 +1,5 @@
 use crate::magic::structure::ConfigPackage;
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use flate2::{Compression, write::GzEncoder};
 use futures_util::StreamExt;
 use reqwest::{Response, StatusCode};
@@ -84,21 +84,23 @@ impl NetworkClient {
         Ok((status_code, request))
     }
 
-    pub async fn get_release_packages(&self, release_id: Option<i32>) -> Vec<ConfigPackage> {
-        if release_id.is_none() {
-            return vec![];
-        }
-        let release_id = release_id.unwrap();
+    pub async fn get_release_packages(
+        &self,
+        release_id: i32,
+        token: &str,
+    ) -> Result<Vec<ConfigPackage>> {
         let url = format!("{}/releases/{}/packages", self.hostname, release_id);
-        let stream = self.client.get(url).send().await;
+        let response = self
+            .client
+            .get(url)
+            .header("Authorization", format!("Bearer {}", token))
+            .send()
+            .await;
 
-        match stream {
-            Ok(stream) => stream.json().await.unwrap_or_default(),
-            Err(e) => {
-                error!("Error getting packages: {}", e);
-                vec![]
-            }
-        }
+        response?
+            .json()
+            .await
+            .with_context(|| "Failed to Parse JSON respone")
     }
 
     pub async fn get_package(&self, package_name: &str) -> Result<()> {
