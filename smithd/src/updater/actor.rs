@@ -398,6 +398,7 @@ impl Actor {
         loop {
             tokio::select! {
                 Some(msg) = self.receiver.recv() => {
+                    info!("Received Message");
                     self.handle_message(msg).await;
                     can_exit = true;
                 }
