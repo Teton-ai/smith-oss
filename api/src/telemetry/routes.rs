@@ -6,13 +6,15 @@ use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
 use serde::Deserialize;
-use tracing::error;
+use tracing::{error, info};
 
 pub async fn victoria(
     Extension(state): Extension<State>,
     req: Request<Body>,
 ) -> Result<StatusCode, StatusCode> {
     let client = state.victoria_client.clone();
+
+    info!("Victoria Metrics request: {:?}", req);
 
     let method = req.method().clone();
     let mut headers = req.headers().clone();
@@ -29,7 +31,13 @@ pub async fn victoria(
         .headers(headers)
         .body(body_bytes);
 
-    let response = request.send().await.map_err(|err| {
+    info!("Victoria Proxy Request {:?}", request);
+
+    let request = request.send().await;
+
+    info!("Victoria Metrics {:?}", request);
+
+    let response = request.map_err(|err| {
         error!("Failed to send request: {}", err);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
