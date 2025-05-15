@@ -149,10 +149,8 @@ async fn start_main_server(config: &'static Config, authorization: Authorization
     let auth = format!("Basic {}", config.victoria_metrics_auth_token);
     headers.insert("authorization", auth.parse().unwrap());
     let victoria_client = reqwest::Client::builder()
-        .http2_keep_alive_interval(Duration::from_secs(10))
-        .http2_keep_alive_timeout(Duration::from_secs(20))
         .default_headers(headers)
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(60))
         .build()
         .unwrap();
 

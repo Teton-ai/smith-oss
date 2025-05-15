@@ -16,12 +16,14 @@ pub async fn victoria(
 
     info!("Victoria Metrics request: {:?}", req);
 
-    let method = req.method().clone();
-    let mut headers = req.headers().clone();
+    let (method, mut headers, body) = {
+        let (parts, body) = req.into_parts();
+        (parts.method, parts.headers, body)
+    };
 
     headers.remove("authorization");
 
-    let body_bytes = to_bytes(req.into_body(), usize::MAX).await.map_err(|err| {
+    let body_bytes = to_bytes(body, usize::MAX).await.map_err(|err| {
         error!("Failed to read body bytes: {}", err);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
