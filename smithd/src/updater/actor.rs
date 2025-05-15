@@ -87,7 +87,7 @@ impl Actor {
                             self.last_update = Some(res);
                             self.status = Status::Idle;
 
-                            if self.last_update.as_ref().map_or(true, |r| r.is_err()) {
+                            if self.last_update.as_ref().is_none_or(|r| r.is_err()) {
                                 return;
                             }
 
@@ -97,7 +97,7 @@ impl Actor {
                             self.last_upgrade = Some(res);
                             self.status = Status::Idle;
 
-                            if self.last_upgrade.as_ref().map_or(true, |r| r.is_err()) {
+                            if self.last_upgrade.as_ref().is_none_or(|r| r.is_err()) {
                                 return;
                             }
 
