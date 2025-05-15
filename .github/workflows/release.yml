@@ -70,10 +70,34 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.RELEASE_PR_TOKEN }}
-          commit-message: "chore(release): ${{ env.CURRENT_VERSION }} to ${{ env.NEW_VERSION }}"
-          title: "chore(release): ${{ env.NEW_VERSION }}"
-          body: Bumped version from ${{ env.CURRENT_VERSION }} to ${{ env.NEW_VERSION }}
+          commit-message: "chore(release): v${{ env.NEW_VERSION }}"
+          title: "chore(release): v${{ env.NEW_VERSION }}"
+          body: "chore(release): v${{ env.CURRENT_VERSION }} to v${{ env.NEW_VERSION }}"
           branch: chore/release-v${{ env.NEW_VERSION }}
           base: main
           labels: automated,release
           delete-branch: true
+
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version and commit message
+        run: |
+          VERSION=$(grep -m 1 'version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+          COMMIT_MSG=$(git log -1 --pretty=format:%s)
+          echo "COMMIT_MSG=$COMMIT_MSG" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        if: |
+          startsWith(env.COMMIT_MSG, format('chore(release): v', env.VERSION))
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
