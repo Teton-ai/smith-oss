@@ -25,7 +25,7 @@ RUN mkdir -p /workspace/target
 RUN mkdir -p /var/run/dbus
 
 # Copy dbus configuration file
-COPY smithd/smithd.conf /etc/dbus-1/system.d/smithd.conf
+COPY smithd/src/dbus/smithd.conf /etc/dbus-1/system.d/smithd.conf
 RUN chmod 0644 /etc/dbus-1/system.d/smithd.conf
 
 # Configure SSH server
