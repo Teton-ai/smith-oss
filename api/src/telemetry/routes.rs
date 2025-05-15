@@ -1,5 +1,3 @@
-use std::error;
-
 use crate::State;
 use crate::db::DeviceWithToken;
 use crate::modem::schema::Modem;
@@ -8,6 +6,7 @@ use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
 use serde::Deserialize;
+use tracing::error;
 
 pub async fn victoria(
     Extension(state): Extension<State>,
