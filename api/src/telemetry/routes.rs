@@ -6,6 +6,7 @@ use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
 use serde::Deserialize;
+use tracing::error;
 
 pub async fn victoria(
     Extension(state): Extension<State>,
@@ -18,19 +19,20 @@ pub async fn victoria(
 
     headers.remove("authorization");
 
-    let body_bytes = to_bytes(req.into_body(), usize::MAX)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let body_bytes = to_bytes(req.into_body(), usize::MAX).await.map_err(|err| {
+        error!("Failed to read body bytes: {}", err);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     let request = client
         .request(method, "https://metrics.teton.ai/opentelemetry/v1/metrics")
         .headers(headers)
         .body(body_bytes);
 
-    let response = request
-        .send()
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let response = request.send().await.map_err(|err| {
+        error!("Failed to send request: {}", err);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     let status = response.status();
 
