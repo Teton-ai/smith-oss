@@ -1,9 +1,9 @@
 name: docs
 
 on:
-  push:
+  release:
     tags:
-      - "*"
+      - 'published'
 
 permissions:
   contents: read

@@ -1,9 +1,9 @@
 name: cli
 
 on:
-  push:
+  release:
     tags:
-      - '*'
+      - 'published'
 
 permissions:
   contents: write

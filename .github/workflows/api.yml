@@ -1,9 +1,9 @@
 name: api
 
 on:
-  push:
+  release:
     tags:
-      - '*'
+      - 'published'
 
 concurrency:
   group: api-${{ github.ref }}

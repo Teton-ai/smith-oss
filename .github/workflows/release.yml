@@ -94,10 +94,10 @@ jobs:
       - name: Create GitHub Release
         if: |
           startsWith(env.COMMIT_MSG, format('chore(release): v', env.VERSION))
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.VERSION }}
-          name: v${{ env.VERSION }}
+          tag_name: "refs/tags/v${{ env.VERSION }}"
           generate_release_notes: true
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
