@@ -78,26 +78,26 @@ jobs:
           labels: automated,release
           delete-branch: true
 
-  create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set version and commit message
-        run: |
-          VERSION=$(grep -m 1 'version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          
-          COMMIT_MSG=$(git log -1 --pretty=format:%s)
-          echo "COMMIT_MSG=$COMMIT_MSG" >> $GITHUB_ENV
-
-      - name: Create GitHub Release
-        if: |
-          startsWith(env.COMMIT_MSG, format('chore(release): v', env.VERSION))
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "refs/tags/v${{ env.VERSION }}"
-          generate_release_notes: true
-          make_latest: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#  create-release:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set version and commit message
+#        run: |
+#          VERSION=$(grep -m 1 'version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+#          echo "VERSION=$VERSION" >> $GITHUB_ENV
+#
+#          COMMIT_MSG=$(git log -1 --pretty=format:%s)
+#          echo "COMMIT_MSG=$COMMIT_MSG" >> $GITHUB_ENV
+#
+#      - name: Create GitHub Release
+#        if: |
+#          startsWith(env.COMMIT_MSG, format('chore(release): v', env.VERSION))
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          tag_name: v${{ env.VERSION }}
+#          generate_release_notes: true
+#          make_latest: true
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

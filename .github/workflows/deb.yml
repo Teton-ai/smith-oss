@@ -1,9 +1,10 @@
 name: deb
 
 on:
-  release:
+  push:
+    branches: [ "main" ]
     tags:
-      - 'published'
+      - '*'
 
 concurrency:
   group: deb-${{ github.sha }}

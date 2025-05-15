@@ -1,9 +1,10 @@
 name: cli
 
 on:
-  release:
+  push:
+    branches: [ "main" ]
     tags:
-      - 'published'
+      - '*'
 
 permissions:
   contents: write
