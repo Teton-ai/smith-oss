@@ -1,0 +1,79 @@
+name: release
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for existing release PR
+        id: check_pr
+        run: |
+          PR_COUNT=$(gh pr list --label release,automated --json number | jq length)
+          if [ "$PR_COUNT" -gt "0" ]; then
+            echo "Release PR already exists, exiting workflow."
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "No existing release PR found, proceeding with version bump."
+            echo "release_exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        if: steps.check_pr.outputs.release_exists != 'true'
+
+      - name: SQLx offline
+        run: echo "SQLX_OFFLINE=true" > .env
+        if: steps.check_pr.outputs.release_exists != 'true'
+
+      - name: Bump version
+        if: steps.check_pr.outputs.release_exists != 'true'
+        run: |
+          # Get the current version from Cargo.toml
+          CURRENT_VERSION=$(grep -m 1 'version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Parse the version components
+          MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+          MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+          PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+          
+          # Increment the patch version
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo "New version: $NEW_VERSION"
+          
+          # Update the version in the Cargo.toml file
+          sed -i "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" Cargo.toml
+          
+          # Store the versions for later steps
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          
+          # Verify the update
+          grep -m 1 'version = ' Cargo.toml
+
+      - name: Check generate lock
+        if: steps.check_pr.outputs.release_exists != 'true'
+        run: cargo generate-lockfile
+
+      - name: Create Pull Request
+        if: steps.check_pr.outputs.release_exists != 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.RELEASE_PR_TOKEN }}
+          commit-message: "chore(release): ${{ env.CURRENT_VERSION }} to ${{ env.NEW_VERSION }}"
+          title: "chore(release): ${{ env.NEW_VERSION }}"
+          body: Bumped version from ${{ env.CURRENT_VERSION }} to ${{ env.NEW_VERSION }}
+          branch: chore/release-v${{ env.NEW_VERSION }}
+          base: main
+          labels: automated,release
+          delete-branch: true
