@@ -56,9 +56,6 @@ pub async fn run() {
     // this will block while we try to have all the checks passing
     bouncer.ok().await;
 
-    // check for updates
-    updater.check_for_updates().await;
-
     // wait for the sweet release of death
     shutdown.wait().await;
 
