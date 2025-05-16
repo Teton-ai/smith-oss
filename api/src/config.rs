@@ -1,5 +1,38 @@
 use anyhow::Context;
+use axum::http::HeaderMap;
 use std::env;
+use std::time::Duration;
+
+#[derive(Debug)]
+pub struct VictoriaMetricsClient {
+    pub client: reqwest::Client,
+    pub url: String,
+}
+
+impl VictoriaMetricsClient {
+    pub fn new() -> Option<Self> {
+        match (
+            env::var("VICTORIA_METRICS_URL").ok(),
+            env::var("VICTORIA_METRICS_AUTH_TOKEN").ok(),
+        ) {
+            (Some(url), Some(auth_token)) => {
+                let mut headers = HeaderMap::new();
+                let auth = format!("Basic {}", auth_token);
+                headers.insert("authorization", auth.parse().unwrap());
+                let victoria_client = reqwest::Client::builder()
+                    .default_headers(headers)
+                    .timeout(Duration::from_secs(60))
+                    .build()
+                    .unwrap();
+                Some(VictoriaMetricsClient {
+                    client: victoria_client,
+                    url,
+                })
+            }
+            _ => None,
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Config {
@@ -9,7 +42,7 @@ pub struct Config {
     pub aws_region: String,
     pub sentry_url: Option<String>,
     pub slack_hook_url: Option<String>,
-    pub victoria_metrics_auth_token: String,
+    pub victoria_metrics_client: Option<VictoriaMetricsClient>,
 }
 
 impl Config {
@@ -25,8 +58,7 @@ impl Config {
             aws_region: env::var("AWS_REGION").context("AWS_REGION is required.")?,
             sentry_url: env::var("SENTRY_URL").ok(),
             slack_hook_url: env::var("SLACK_HOOK_URL").ok(),
-            victoria_metrics_auth_token: env::var("VICTORIA_METRICS_AUTH_TOKEN")
-                .context("VICTORIA_METRICS_AUTH_TOKEN is required.")?,
+            victoria_metrics_client: VictoriaMetricsClient::new(),
         })
     }
 }

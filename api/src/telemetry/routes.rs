@@ -12,7 +12,10 @@ pub async fn victoria(
     Extension(state): Extension<State>,
     req: Request<Body>,
 ) -> Result<StatusCode, StatusCode> {
-    let client = state.victoria_client.clone();
+    let client = match &state.config.victoria_metrics_client {
+        Some(client_config) => client_config,
+        None => return Err(StatusCode::NOT_IMPLEMENTED),
+    };
 
     info!("Victoria Metrics request: {:?}", req);
 
@@ -29,7 +32,8 @@ pub async fn victoria(
     })?;
 
     let request = client
-        .request(method, "https://metrics.teton.ai/opentelemetry/v1/metrics")
+        .client
+        .request(method, &client.url)
         .headers(headers)
         .body(body_bytes);
 

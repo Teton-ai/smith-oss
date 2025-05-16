@@ -1,7 +1,7 @@
 use axum::Router;
 use axum::error_handling::HandleErrorLayer;
 use axum::extract::{DefaultBodyLimit, MatchedPath};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use axum::{
@@ -21,7 +21,7 @@ use std::fs::File;
 use std::future::ready;
 use std::io::Read;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::net::TcpListener;
 use tokio::sync::broadcast::Sender;
 use tokio::sync::{Mutex, broadcast};
@@ -51,7 +51,6 @@ mod users;
 #[derive(Clone, Debug)]
 pub struct State {
     pg_pool: PgPool,
-    victoria_client: reqwest::Client,
     config: &'static Config,
     public_events: Arc<Mutex<Sender<PublicEvent>>>,
     authorization: Arc<AuthorizationConfig>,
@@ -145,18 +144,8 @@ async fn start_main_server(config: &'static Config, authorization: Authorization
     let (tx_message, _rx_message) = broadcast::channel::<PublicEvent>(1);
     let tx_message = Arc::new(Mutex::new(tx_message));
 
-    let mut headers = HeaderMap::new();
-    let auth = format!("Basic {}", config.victoria_metrics_auth_token);
-    headers.insert("authorization", auth.parse().unwrap());
-    let victoria_client = reqwest::Client::builder()
-        .default_headers(headers)
-        .timeout(Duration::from_secs(60))
-        .build()
-        .unwrap();
-
     let state = State {
         pg_pool: pool,
-        victoria_client,
         config,
         public_events: tx_message,
         authorization: Arc::new(authorization),
