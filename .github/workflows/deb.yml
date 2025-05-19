@@ -23,8 +23,10 @@ jobs:
         include:
           - arch: amd64
             os: ubuntu-22.04
+            package-name-suffix: _amd64
           - arch: arm64
             os: [self-hosted, linux, arm64, aws, ec2, ubuntu-20.04]
+            package-name-suffix: ''
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -37,3 +39,22 @@ jobs:
 
       - name: Release to Teton APT Registry
         run: curl -F package=@${{ env.PACKAGE_FILE }} https://${{ secrets.FURY_TOKEN }}@push.fury.io/teton/
+
+      - name: Retrieve Auth0 token
+        uses: Kajatin/auth0-login@5fe01b431039f229a593919841afeb7cea0d8cf1
+        id: api-auth
+        with:
+          tenant-url: https://auth0.teton.ai
+          client-id: SYyZo5ClUWSfb3F4qFqNHxqeLoQDnOMK
+          client-secret: ${{ secrets.AUTH0_CLIENT_SECRET }}
+          audience: https://teton.ai
+
+      - name: Release Package
+        uses: ./.github/actions/release-package
+        with:
+          api-url: https://api.smith.teton.ai
+          api-token: ${{ steps.api-auth.outputs.access-token }}
+          package-name: ${{ matrix.package }}
+          package-name-suffix: ${{ matrix.package-name-suffix }}
+          package-version: ${{ env.PACKAGE_VERSION }}
+          package-file: ${{ env.PACKAGE_FILE }}
