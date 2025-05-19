@@ -1,0 +1,42 @@
+name: "[Smith] Release Package"
+description: 'Release Package to Smith API Github Actions workflow.'
+author: Alvaro Molina <alvaro@teton.ai>
+
+branding:
+  icon: 'play-circle'
+  color: 'green'
+
+inputs:
+  api-url:
+    description: 'API URL'
+    required: true
+  api-token:
+    description: 'API Token'
+    required: true
+  package-name:
+    description: 'The package name'
+    required: true
+  package-name-suffix:
+    description: 'The package suffix'
+    required: false
+    default: ''
+  package-version:
+    description: 'The package version'
+    required: true
+  package-file:
+    description: 'The package file'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        curl \
+          --fail \
+          --location \
+          --request PUT \
+          '${{ inputs.api-url }}/packages' \
+          --header 'Authorization: Bearer ${{ inputs.api-token }}' \
+          --form 'name="${{ inputs.package-name }}${{ inputs.package-name-suffix }}"' \
+          --form 'version="${{ inputs.package-version }}"' \
+          --form 'file=@"${{ inputs.package-file }}"'
+      shell: bash
