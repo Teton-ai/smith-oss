@@ -14,19 +14,23 @@ pub mod upload;
 
 use crate::State;
 use crate::db::{AuthorizationError, DBHandler, DeviceWithToken};
+use axum::body::Body;
 use axum::{
     Json, async_trait,
     extract::{Extension, FromRequestParts, Path, Query},
-    http::{StatusCode, header, request::Parts},
+    http::{StatusCode, request::Parts},
     response::{IntoResponse, Response},
 };
 use axum_extra::{
     TypedHeader,
     headers::{Authorization, authorization::Bearer},
 };
+use futures::TryStreamExt;
+use s3::error::S3Error;
 use s3::{Bucket, creds::Credentials};
 use serde::Deserialize;
 use smith::utils::schema::Package;
+use std::error::Error;
 use tracing::{error, info};
 
 // https://docs.rs/axum/latest/axum/extract/index.html#accessing-other-extractors-in-fromrequest-or-fromrequestparts-implementations
@@ -91,18 +95,31 @@ pub async fn fetch_package(
         error!("{:?}", e);
         StatusCode::INTERNAL_SERVER_ERROR.into_response()
     })?;
-    let pre_signed_url = bucket
-        .presign_get(
-            &deb_package_name,
-            43200, // 12 hours
-            None,
-        )
+
+    let stream = bucket
+        .get_object_stream(&deb_package_name)
         .await
         .map_err(|e| {
             error!("{:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            match e {
+                S3Error::HttpFailWithBody(404, _) => (
+                    StatusCode::NOT_FOUND,
+                    format!("{} package not found", &deb_package_name),
+                )
+                    .into_response(),
+
+                _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            }
         })?;
-    Ok((StatusCode::FOUND, [(header::LOCATION, pre_signed_url)]).into_response())
+
+    let adapted_stream = stream
+        .bytes
+        .map_ok(|data| data)
+        .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync + 'static>);
+
+    let stream = Body::from_stream(adapted_stream);
+
+    Ok(Response::new(stream).into_response())
 }
 
 #[tracing::instrument]
