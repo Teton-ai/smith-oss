@@ -2,7 +2,6 @@ name: deb
 
 on:
   push:
-    branches: [ "main" ]
     tags:
       - '*'
 

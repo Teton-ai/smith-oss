@@ -2,7 +2,6 @@ name: cli
 
 on:
   push:
-    branches: [ "main" ]
     tags:
       - '*'
 
