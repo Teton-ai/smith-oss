@@ -66,7 +66,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("Package must already be available");
         let package_location = format!("packages/{}", package_file);
         info!("Installing package: smith");
-        let install_command = format!("sudo apt install ./{} -y", package_location);
+        let install_command = format!(
+            "sudo apt install ./{} -y --allow-downgrades",
+            package_location
+        );
         let status = tokio::process::Command::new("sh")
             .arg("-c")
             .arg(install_command)
