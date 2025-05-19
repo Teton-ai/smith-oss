@@ -53,10 +53,6 @@ pub async fn victoria(
     Ok(status)
 }
 
-pub async fn service() -> Result<StatusCode, StatusCode> {
-    Ok(StatusCode::OK)
-}
-
 #[derive(Debug, Deserialize)]
 pub struct NewModem {
     pub imei: String,

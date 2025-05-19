@@ -107,22 +107,6 @@ pub struct DeviceRelease {
     pub target_release: Option<Release>,
 }
 
-#[derive(Debug, Serialize)]
-pub struct Telemetry {
-    pub id: Option<i32>,
-    pub timestamp: Option<chrono::DateTime<chrono::Utc>>,
-    pub serial_number: Option<String>,
-    pub service: Option<String>,
-    pub data: Option<serde_json::Value>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct TelemetryPaginated {
-    pub telemetry: Vec<Telemetry>,
-    pub next: Option<String>,
-    pub previous: Option<String>,
-}
-
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct DeviceHealth {
     pub id: i32,

@@ -230,10 +230,6 @@ async fn start_main_server(config: &'static Config, authorization: Authorization
             get(handlers::devices::get_tag_for_device),
         )
         .route(
-            "/devices/:device_id/telemetry",
-            get(handlers::devices::get_telemetry_for_device),
-        )
-        .route(
             "/devices/:device_id/tags/:tag_id",
             delete(handlers::devices::delete_tag_from_device)
                 .put(handlers::devices::add_tag_to_device),
@@ -320,16 +316,6 @@ async fn start_main_server(config: &'static Config, authorization: Authorization
         .route(
             "/smith/telemetry/modem",
             post(telemetry::routes::modem).layer(
-                ServiceBuilder::new()
-                    .layer(HandleErrorLayer::new(|_| async move {
-                        (StatusCode::INTERNAL_SERVER_ERROR, "Unhandled server error")
-                    }))
-                    .layer(RequestDecompressionLayer::new()),
-            ),
-        )
-        .route(
-            "/smith/telemetry/:service",
-            post(telemetry::routes::service).layer(
                 ServiceBuilder::new()
                     .layer(HandleErrorLayer::new(|_| async move {
                         (StatusCode::INTERNAL_SERVER_ERROR, "Unhandled server error")
