@@ -6,51 +6,43 @@ use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
 use serde::Deserialize;
-use tracing::{error, info};
+use tracing::error;
 
 pub async fn victoria(
     Extension(state): Extension<State>,
     req: Request<Body>,
 ) -> Result<StatusCode, StatusCode> {
-    let client = match &state.config.victoria_metrics_client {
-        Some(client_config) => client_config,
-        None => return Err(StatusCode::NOT_IMPLEMENTED),
-    };
+    let client_config = state
+        .config
+        .victoria_metrics_client
+        .as_ref()
+        .ok_or(StatusCode::NOT_IMPLEMENTED)?;
 
-    info!("Victoria Metrics request: {:?}", req);
-
-    let (method, mut headers, body) = {
-        let (parts, body) = req.into_parts();
-        (parts.method, parts.headers, body)
-    };
+    let (parts, body) = req.into_parts();
+    let method = parts.method;
+    let mut headers = parts.headers;
 
     headers.remove("authorization");
-
     let body_bytes = to_bytes(body, usize::MAX).await.map_err(|err| {
         error!("Failed to read body bytes: {}", err);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    let request = client
+    let response = client_config
         .client
-        .request(method, &client.url)
+        .request(method, &client_config.url)
         .headers(headers)
-        .body(body_bytes);
+        .body(body_bytes)
+        .send()
+        .await;
 
-    info!("Victoria Proxy Request {:?}", request);
-
-    let request = request.send().await;
-
-    info!("Victoria Metrics {:?}", request);
-
-    let response = request.map_err(|err| {
-        error!("Failed to send request: {}", err);
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-
-    let status = response.status();
-
-    Ok(status)
+    match response {
+        Ok(res) => Ok(res.status()),
+        Err(err) => {
+            error!(error = %err, "Failed to forward request to VictoriaMetrics");
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]

@@ -11,7 +11,7 @@ use axum::{http::StatusCode, response::Result};
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
 use smith::utils::schema;
 use tempfile::NamedTempFile;
-use tracing::{error, info};
+use tracing::{debug, error};
 
 const PACKAGES_TAG: &str = "packages";
 
@@ -84,10 +84,10 @@ pub async fn release_package(
     let control_tar = pkg.control().unwrap();
     let control = debpkg::Control::extract(control_tar).unwrap();
     let arch = control.get("Architecture").unwrap();
-    info!("File Name: {}", file_name);
-    info!("Package Name: {}", control.name());
-    info!("Package Version: {}", control.version());
-    info!("Package Architecture: {}", arch);
+    debug!("File Name: {}", file_name);
+    debug!("Package Name: {}", control.name());
+    debug!("Package Version: {}", control.version());
+    debug!("Package Architecture: {}", arch);
 
     Package::new(
         control.name(),

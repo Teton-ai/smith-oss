@@ -96,8 +96,6 @@ fn main() {
         .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
         .init();
 
-    info!("{}", authorization);
-
     // Corresponds to `#[tokio::main]`.
     // See https://docs.rs/tokio-macros/latest/src/tokio_macros/lib.rs.html#225.
     tokio::runtime::Builder::new_current_thread()
@@ -127,7 +125,7 @@ impl Modify for SecurityAddon {
 struct ApiDoc;
 
 async fn start_main_server(config: &'static Config, authorization: AuthorizationConfig) {
-    info!("Starting up SMITH API");
+    info!("Starting up SMITH API - {}", env!("CARGO_PKG_VERSION"));
     // set up connection pool
     let pool = PgPoolOptions::new()
         .max_connections(100)

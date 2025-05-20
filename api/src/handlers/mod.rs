@@ -31,7 +31,7 @@ use s3::{Bucket, creds::Credentials};
 use serde::Deserialize;
 use smith::utils::schema::Package;
 use std::error::Error;
-use tracing::{error, info};
+use tracing::{debug, error};
 
 // https://docs.rs/axum/latest/axum/extract/index.html#accessing-other-extractors-in-fromrequest-or-fromrequestparts-implementations
 #[async_trait]
@@ -81,7 +81,7 @@ pub async fn fetch_package(
     params: Query<FetchPackageQuery>,
 ) -> Result<Response, Response> {
     let deb_package_name = &params.name;
-    info!("Fetching package {}", &deb_package_name);
+    debug!("Fetching package {}", &deb_package_name);
     let bucket = Bucket::new(
         &state.config.packages_bucket_name,
         state
