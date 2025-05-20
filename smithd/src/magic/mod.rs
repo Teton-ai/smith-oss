@@ -70,13 +70,13 @@ impl Magic {
                         self.path = path;
                     }
                     Err(err) => {
-                        info!("Failed to load Magic from file: {:?}", err);
+                        error!("Failed to load Magic from file: {:?}", err);
                     }
                 }
                 signal.send(()).unwrap();
             }
             MagicMessage::GetChecks { sender } => {
-                info!("Getting Magic checks");
+                debug!("Getting Magic checks");
 
                 if let Some(conf) = &self.configuration {
                     debug!("Sending {} checks", conf.get_checks().len());
@@ -86,7 +86,7 @@ impl Magic {
                 }
             }
             MagicMessage::GetTunnelDetails { sender } => {
-                info!("Getting Magic Tunnel Details");
+                debug!("Getting Magic Tunnel Details");
                 if let Some(conf) = &self.configuration {
                     _ = sender.send(conf.get_tunnel_details());
                 } else {
@@ -94,7 +94,7 @@ impl Magic {
                 }
             }
             MagicMessage::GetPackages { sender } => {
-                info!("Getting Magic Packages");
+                debug!("Getting Magic Packages");
                 if let Some(conf) = &self.configuration {
                     _ = sender.send(conf.get_packages());
                 } else {
@@ -102,7 +102,7 @@ impl Magic {
                 }
             }
             MagicMessage::GetServer { sender } => {
-                info!("Getting Magic Server");
+                debug!("Getting Magic Server");
                 if let Some(conf) = &self.configuration {
                     _ = sender.send(conf.get_server());
                 } else {
@@ -111,7 +111,7 @@ impl Magic {
                 }
             }
             MagicMessage::GetReleaseId { rpc } => {
-                info!("Getting Magic Release Id");
+                debug!("Getting Magic Release Id");
                 if let Some(conf) = &self.configuration {
                     _ = rpc.send(conf.get_release_id());
                 } else {
@@ -125,7 +125,7 @@ impl Magic {
                     if current_release_id == release_id {
                         return;
                     }
-                    info!("Setting Magic Release Id");
+                    debug!("Setting Magic Release Id");
                     conf.set_release_id(release_id);
                     match &self.path {
                         Some(path) => {
@@ -138,7 +138,7 @@ impl Magic {
                 }
             }
             MagicMessage::GetTargetReleaseId { rpc } => {
-                info!("Getting Magic Target Release Id");
+                debug!("Getting Magic Target Release Id");
                 if let Some(conf) = &self.configuration {
                     _ = rpc.send(conf.get_target_release_id());
                 } else {
@@ -152,7 +152,7 @@ impl Magic {
                     if current_target_release_id == target_release_id {
                         return;
                     }
-                    info!("Setting Magic Target Release Id");
+                    debug!("Setting Magic Target Release Id");
                     conf.set_target_release_id(target_release_id);
                     match &self.path {
                         Some(path) => {
@@ -165,7 +165,7 @@ impl Magic {
                 }
             }
             MagicMessage::SetPackages { packages } => {
-                info!("Setting Magic Packages");
+                debug!("Setting Magic Packages");
                 if let Some(conf) = &mut self.configuration {
                     conf.set_packages(packages);
                     match &self.path {
@@ -179,7 +179,7 @@ impl Magic {
                 }
             }
             MagicMessage::GetToken { rpc } => {
-                info!("Getting Magic Token From Magic File");
+                debug!("Getting Magic Token From Magic File");
                 if let Some(conf) = &self.configuration {
                     _ = rpc.send(conf.get_token());
                 } else {
@@ -188,7 +188,7 @@ impl Magic {
                 }
             }
             MagicMessage::SetToken { token } => {
-                info!("Setting Magic Token");
+                debug!("Setting Magic Token");
                 if let Some(conf) = &mut self.configuration {
                     conf.set_token(token);
                     match &self.path {
