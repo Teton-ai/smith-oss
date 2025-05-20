@@ -179,7 +179,7 @@ impl DownloaderHandle {
         rate: f64,
     ) -> anyhow::Result<String> {
         // unwrap because if this fails then we are in a bad state
-        let (rpc, receiver) = oneshot::channel();
+        let (rpc, _) = oneshot::channel();
 
         self.sender
             .send(DownloaderMessage::Download {
@@ -191,7 +191,7 @@ impl DownloaderHandle {
             .await
             .unwrap();
 
-        receiver.await.unwrap()
+        Ok("Download started, not waiting for result".to_string())
     }
 
     pub async fn check_download_status(&self) -> anyhow::Result<DownloadingStatus> {
