@@ -80,6 +80,7 @@ pub enum SafeCommandRx {
         stderr: String,
     },
     DownloadOTA,
+    CheckOTAStatus,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -113,6 +114,7 @@ pub enum SafeCommandTx {
         payload: String,
         rate: f64,
     },
+    CheckOTAStatus,
     StartOTA,
 }
 

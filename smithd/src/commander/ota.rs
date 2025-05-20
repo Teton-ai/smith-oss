@@ -63,8 +63,9 @@ pub(super) async fn download_ota(
     }
 
     // Download the OTA tools
+    let remote_file = format!("ota/{}", tools_file);
     let result = download_handle
-        .download(tools_file, "/otatool/ota_tools.tbz2", rate)
+        .download(remote_file.as_str(), "/otatool/ota_tools.tbz2", rate)
         .await;
     if let Err(_) = result {
         return SafeCommandResponse {
@@ -74,8 +75,13 @@ pub(super) async fn download_ota(
         };
     }
 
+    let remote_file = format!("ota/{}", package_file);
     let result = download_handle
-        .download(package_file, "/ota/ota_payload_package.tar.gz", rate)
+        .download(
+            remote_file.as_str(),
+            "/ota/ota_payload_package.tar.gz",
+            rate,
+        )
         .await;
     if let Err(_) = result {
         return SafeCommandResponse {
@@ -98,6 +104,14 @@ pub(super) async fn start_ota(id: i32, download_handle: &DownloaderHandle) -> Sa
     SafeCommandResponse {
         id,
         command: SafeCommandRx::DownloadOTA,
+        status: 0,
+    }
+}
+
+pub(super) async fn check_ota(id: i32, download_handle: &DownloaderHandle) -> SafeCommandResponse {
+    SafeCommandResponse {
+        id,
+        command: SafeCommandRx::CheckOTAStatus,
         status: 0,
     }
 }

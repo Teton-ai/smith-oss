@@ -80,6 +80,9 @@ impl CommandQueueExecutor {
                 )
                 .await
             }
+            SafeCommandTx::CheckOTAStatus => {
+                ota::check_ota(action.id, &self.downloader_handle).await
+            }
             SafeCommandTx::StartOTA => ota::start_ota(action.id, &self.downloader_handle).await,
         }
     }
