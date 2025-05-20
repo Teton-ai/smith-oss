@@ -1,3 +1,4 @@
+use crate::control::update;
 use crate::magic::MagicHandle;
 use crate::shutdown::{ShutdownHandler, ShutdownSignals};
 use crate::utils::network::NetworkClient;
@@ -55,59 +56,33 @@ impl Actor {
     async fn handle_message(&mut self, msg: ActorMessage) {
         match msg {
             ActorMessage::Update => {
-                info!("Checking for updates");
-                self.status = Status::Updating;
-                let res = self.check_for_updates().await.map(|_| time::Instant::now());
-                info!("Check for updates result: {:?}", res);
-                self.last_update = Some(res);
-                self.status = Status::Idle;
+                self.update();
             }
             ActorMessage::Upgrade => {
-                info!("Upgrading device");
-                self.status = Status::Upgrading;
-                let res = self.upgrade_device().await.map(|_| time::Instant::now());
-                info!("Upgrading result: {:?}, changing to app mode", res);
-                self.last_upgrade = Some(res);
-                self.status = Status::Idle;
+                self.upgrade();
             }
             ActorMessage::Checking => {
                 let release_id = self.magic.get_release_id().await;
                 let target_release_id = self.magic.get_target_release_id().await;
 
-                match (release_id, target_release_id) {
-                    (Some(release_id), Some(target_release_id)) => {
-                        if release_id != target_release_id {
-                            info!(
-                                "Upgrading from release_id {release_id:?} to target_release_id {target_release_id:?}"
-                            );
+                if release_id != target_release_id {
+                    info!(
+                        "Upgrading from release_id {release_id:?} to target_release_id {target_release_id:?}"
+                    );
 
-                            self.status = Status::Updating;
-                            let res = self.check_for_updates().await.map(|_| time::Instant::now());
-                            info!("Check for updates result: {:?}", res);
-                            self.last_update = Some(res);
-                            self.status = Status::Idle;
+                    self.update();
 
-                            if self.last_update.as_ref().is_none_or(|r| r.is_err()) {
-                                return;
-                            }
-
-                            self.status = Status::Upgrading;
-                            let res = self.upgrade_device().await.map(|_| time::Instant::now());
-                            info!("Upgrade Result: {:?}", res);
-                            self.last_upgrade = Some(res);
-                            self.status = Status::Idle;
-
-                            if self.last_upgrade.as_ref().is_none_or(|r| r.is_err()) {
-                                return;
-                            }
-
-                            // Signal that the updated has been run by setting the release id to the target release id.
-                            self.magic.set_release_id(Some(target_release_id)).await;
-                        }
+                    if matches!(self.last_update, Some(Err(_)) | None) {
+                        return;
                     }
-                    _ => {
-                        info!("No upgrade needed, versions match");
+
+                    self.upgrade();
+
+                    if matches!(self.last_upgrade, Some(Err(_)) | None) {
+                        return;
                     }
+
+                    self.magic.set_release_id(target_release_id).await;
                 }
             }
             ActorMessage::StatusReport { rpc } => {
@@ -148,6 +123,24 @@ impl Actor {
                 ));
             }
         }
+    }
+
+    async fn update(&mut self) {
+        info!("Checking for updates");
+        self.status = Status::Updating;
+        let res = self.check_for_updates().await.map(|_| time::Instant::now());
+        info!("Check for updates result: {:?}", res);
+        self.last_update = Some(res);
+        self.status = Status::Idle;
+    }
+
+    async fn upgrade(&mut self) {
+        info!("Upgrading device");
+        self.status = Status::Upgrading;
+        let res = self.upgrade_device().await.map(|_| time::Instant::now());
+        info!("Upgrading result: {:?}, changing to app mode", res);
+        self.last_upgrade = Some(res);
+        self.status = Status::Idle;
     }
 
     async fn check_for_updates(&self) -> Result<()> {
@@ -393,27 +386,17 @@ impl Actor {
 
         let mut update_check_interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
 
-        let mut can_exit = false;
-
         loop {
             tokio::select! {
                 Some(msg) = self.receiver.recv() => {
                     info!("Received Message");
                     self.handle_message(msg).await;
-                    can_exit = true;
                 }
                 _ = update_check_interval.tick() => {
                     self.handle_message(ActorMessage::Checking).await;
                 }
                 _ = self.shutdown.token.cancelled() => {
-                    loop {
-                        if can_exit {
-                            break;
-                        } else {
-                            info!("Updater waiting for tasks to finish");
-                            time::sleep(time::Duration::from_secs(1)).await;
-                        }
-                    }
+                    info!("Updater waiting for tasks to finish");
                     break;
                 }
             }
