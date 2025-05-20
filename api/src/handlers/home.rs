@@ -56,7 +56,7 @@ pub async fn register_device(
     Extension(state): Extension<State>,
     Json(payload): Json<DeviceRegistration>,
 ) -> (StatusCode, Json<DeviceRegistrationResponse>) {
-    info!("Registering device {:?}", payload);
+    debug!("Registering device {:?}", payload);
 
     let token = crate::device::Device::register_device(payload, &state.pg_pool, state.config).await;
 

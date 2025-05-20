@@ -10,7 +10,7 @@ use axum_extra::extract::Query;
 use schema::SafeCommandRequest;
 use serde::Deserialize;
 use sqlx::Row;
-use tracing::{error, info};
+use tracing::{debug, error};
 pub mod helpers;
 pub mod types;
 use crate::device::Device;
@@ -51,7 +51,7 @@ pub async fn get_devices_new(
         return Err(StatusCode::FORBIDDEN);
     }
 
-    info!(
+    debug!(
         "Fetching devices with filter kind: {filter_kind}, filter value: {filter_value}, reverse: {reverse}, limit: {limit}"
     );
     let devices = match (filter_kind.as_str(), reverse) {
@@ -286,7 +286,7 @@ pub async fn get_devices(
     Extension(state): Extension<State>,
     filter: Query<DeviceFilter>,
 ) -> Result<Json<Vec<Device>>, StatusCode> {
-    info!("Getting devices {:?}", filter);
+    debug!("Getting devices {:?}", filter);
 
     if let Some(tag) = &filter.tag {
         let devices = sqlx::query_as!(
@@ -402,7 +402,7 @@ pub async fn get_tag_for_device(
     Path(device_id): Path<i32>,
     Extension(state): Extension<State>,
 ) -> Result<Json<Vec<types::Tag>>, StatusCode> {
-    info!("Getting tags for device {}", device_id);
+    debug!("Getting tags for device {}", device_id);
     let tags = sqlx::query_as!(
         types::Tag,
         r#"SELECT

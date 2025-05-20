@@ -7,7 +7,7 @@ use smith::utils::schema::SafeCommandTx::{UpdateNetwork, UpdateVariables};
 use smith::utils::schema::{HomePost, NetworkType, SafeCommandRequest, SafeCommandRx};
 use sqlx::PgPool;
 use thiserror::Error;
-use tracing::{error, info};
+use tracing::{debug, error};
 
 #[derive(Debug)]
 pub struct DeviceWithToken {
@@ -212,8 +212,8 @@ impl DBHandler {
         commands: Vec<SafeCommandRequest>,
         pool: &PgPool,
     ) -> Result<Vec<i32>> {
-        info!("Adding commands to device {}", serial_number);
-        info!("Commands: {:?}", commands);
+        debug!("Adding commands to device {}", serial_number);
+        debug!("Commands: {:?}", commands);
         let mut command_ids = Vec::new();
 
         let mut tx = pool.begin().await?;
