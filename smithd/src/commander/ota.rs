@@ -1,4 +1,6 @@
-use crate::downloader::DownloaderHandle;
+use governor::clock::FakeRelativeClock;
+
+use crate::downloader::{DownloaderHandle, DownloadingStatus};
 use crate::filemanager::FileManagerHandle;
 use crate::utils::schema::{SafeCommandResponse, SafeCommandRx};
 
@@ -37,59 +39,33 @@ pub(super) async fn download_ota(
     package_file: &str,
     rate: f64,
 ) -> SafeCommandResponse {
-    // Create the storage folders
+    // Create OTA storage folder
     let arguments: Vec<String> = vec!["-p".to_owned(), "/ota".to_owned()];
-    let result = file_handle
+    let _ = file_handle // No errors returned from the function
         .execute_system_command("mkdir", arguments, None)
         .await;
-    if let Err(_) = result {
-        return SafeCommandResponse {
-            id,
-            command: SafeCommandRx::DownloadOTA,
-            status: -1,
-        };
-    }
 
+    // Create OTA tools storage folder
     let arguments: Vec<String> = vec!["-p".to_owned(), "/otatool".to_owned()];
-    let result = file_handle
+    let _ = file_handle
         .execute_system_command("mkdir", arguments, None)
         .await;
-    if let Err(_) = result {
-        return SafeCommandResponse {
-            id,
-            command: SafeCommandRx::DownloadOTA,
-            status: -1,
-        };
-    }
 
     // Download the OTA tools
     let remote_file = format!("ota/{}", tools_file);
-    let result = download_handle
+    let _ = download_handle
         .download(remote_file.as_str(), "/otatool/ota_tools.tbz2", rate)
         .await;
-    if let Err(_) = result {
-        return SafeCommandResponse {
-            id,
-            command: SafeCommandRx::DownloadOTA,
-            status: -1,
-        };
-    }
 
+    // Download the OTA payload package
     let remote_file = format!("ota/{}", package_file);
-    let result = download_handle
+    let _ = download_handle
         .download(
             remote_file.as_str(),
             "/ota/ota_payload_package.tar.gz",
             rate,
         )
         .await;
-    if let Err(_) = result {
-        return SafeCommandResponse {
-            id,
-            command: SafeCommandRx::DownloadOTA,
-            status: -1,
-        };
-    }
 
     SafeCommandResponse {
         id,
@@ -109,9 +85,32 @@ pub(super) async fn start_ota(id: i32, download_handle: &DownloaderHandle) -> Sa
 }
 
 pub(super) async fn check_ota(id: i32, download_handle: &DownloaderHandle) -> SafeCommandResponse {
+    let result = download_handle.check_download_status().await;
+    let result_unwrapped = match result {
+        Ok(result) => result,
+        Err(_) => {
+            return SafeCommandResponse {
+                id,
+                command: SafeCommandRx::CheckOTAStatus {
+                    status: "Error".to_string(),
+                },
+                status: -1,
+            };
+        }
+    };
+
+    let status;
+    match result_unwrapped {
+        DownloadingStatus::Failed => status = "Failed",
+        DownloadingStatus::Downloading => status = "Downloading",
+        DownloadingStatus::Success => status = "Success",
+    }
+
     SafeCommandResponse {
         id,
-        command: SafeCommandRx::CheckOTAStatus,
+        command: SafeCommandRx::CheckOTAStatus {
+            status: status.to_string(),
+        },
         status: 0,
     }
 }

@@ -80,7 +80,9 @@ pub enum SafeCommandRx {
         stderr: String,
     },
     DownloadOTA,
-    CheckOTAStatus,
+    CheckOTAStatus {
+        status: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
