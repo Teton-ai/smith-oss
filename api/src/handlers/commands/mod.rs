@@ -30,6 +30,12 @@ pub async fn get_commands() -> Result<Json<Vec<SafeCommandTx>>, StatusCode> {
         },
         SafeCommandTx::OpenTunnel { port: None },
         SafeCommandTx::CloseTunnel,
+        SafeCommandTx::DownloadOTA {
+            tools: "ota_tools.tbz2".to_string(),
+            payload: "ota_payload_package.tar.gz".to_string(),
+            rate: 1,
+        },
+        SafeCommandTx::StartOTA,
     ];
 
     Ok(Json(commands))

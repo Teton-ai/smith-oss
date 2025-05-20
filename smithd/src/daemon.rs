@@ -31,7 +31,13 @@ pub async fn run() {
 
     let filemanager = FileManagerHandle::new(shutdown.signals(), configuration.clone());
 
-    let commander = CommanderHandle::new(shutdown.signals(), tunnel.clone(), updater.clone());
+    let commander = CommanderHandle::new(
+        shutdown.signals(),
+        tunnel.clone(),
+        updater.clone(),
+        downloader.clone(),
+        filemanager.clone(),
+    );
 
     let _postman = PostmanHandle::new(
         shutdown.signals(),

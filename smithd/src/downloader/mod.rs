@@ -115,71 +115,29 @@ impl Downloader {
 
         loop {
             tokio::select! {
-
-
                 Some(msg) = self.receiver.recv() => {
-
-
                     info!("Received message: {:?}", msg);
-
-
                     self.handle_message(msg).await;
-
-
                 }
-
 
                 _ = self.shutdown.token.cancelled() => {
-
-
                     let mut count = 1;
 
-
                     loop {
-
-
                         if !self.is_downloading.load(Ordering::SeqCst) {
-
-
                             break;
-
-
                         } else {
-
-
                             info!("Waiting for download task to finish");
-
-
                             time::sleep(time::Duration::from_secs(1)).await;
-
-
                             if count > self.timeout {
-
-
                                 self.force_stop.store(true, Ordering::SeqCst);
-
-
                             }
-
-
                             count += 1;
-
-
                         }
-
-
                     }
-
-
                     info!("Download task shutting down gracefully");
-
-
                     break;
-
-
                 }
-
-
             }
         }
     }
