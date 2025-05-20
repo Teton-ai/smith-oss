@@ -1,5 +1,5 @@
 use crate::downloader::DownloaderHandle;
-use crate::filemanager::{self, FileManagerHandle};
+use crate::filemanager::FileManagerHandle;
 use crate::shutdown::ShutdownSignals;
 use crate::tunnel::TunnelHandle;
 use crate::updater::UpdaterHandle;

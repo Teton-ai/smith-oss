@@ -9,6 +9,8 @@ impl OTAConstants {
     const OTA_STORAGE: &'static str = "/ota";
     const PACKAGE_FILE: &'static str = "ota_payload_package.tar.gz";
     const TOOLS_FILE: &'static str = "ota_tools.tbz2";
+    const OTA_SCRIPT_DIR: &'static str =
+        "/otatool/Linux_for_Tegra/tools/ota_tools/version_upgrade/";
 }
 
 pub(super) async fn download_ota(
@@ -63,12 +65,17 @@ pub(super) async fn download_ota(
 pub(super) async fn start_ota(id: i32, file_handle: &FileManagerHandle) -> SafeCommandResponse {
     // TODO: Think about adding its own response here?
     // The function will auto restart the device so I don't think we will ever see this
-    let arguments: Vec<String> = vec!["/ota/ota_payload_package.tar.gz".to_owned()];
+    let local_file = format!(
+        "{}/{}",
+        OTAConstants::OTA_STORAGE,
+        OTAConstants::PACKAGE_FILE
+    );
+    let arguments: Vec<String> = vec![local_file];
     match file_handle
         .execute_script(
             "nv_ota_start.sh",
             arguments,
-            Some("/otatool/Linux_for_Tegra/tools/ota_tools/version_upgrade/"),
+            Some(OTAConstants::OTA_SCRIPT_DIR),
         )
         .await
     {
