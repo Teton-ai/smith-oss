@@ -39,15 +39,52 @@ pub(super) async fn download_ota(
 ) -> SafeCommandResponse {
     // Create the storage folders
     let arguments: Vec<String> = vec!["-p".to_owned(), "/ota".to_owned()];
-    file_handle
+    let result = file_handle
         .execute_system_command("mkdir", arguments, None)
         .await;
+    if let Err(_) = result {
+        return SafeCommandResponse {
+            id,
+            command: SafeCommandRx::DownloadOTA,
+            status: -1,
+        };
+    }
+
     let arguments: Vec<String> = vec!["-p".to_owned(), "/otatool".to_owned()];
-    file_handle
+    let result = file_handle
         .execute_system_command("mkdir", arguments, None)
         .await;
+    if let Err(_) = result {
+        return SafeCommandResponse {
+            id,
+            command: SafeCommandRx::DownloadOTA,
+            status: -1,
+        };
+    }
+
     // Download the OTA tools
-    download_handle.download(tools_file, "/ota/ota_payload_package.tar.gz", rate);
+    let result = download_handle
+        .download(tools_file, "/otatool/ota_tools.tbz2", rate)
+        .await;
+    if let Err(_) = result {
+        return SafeCommandResponse {
+            id,
+            command: SafeCommandRx::DownloadOTA,
+            status: -1,
+        };
+    }
+
+    let result = download_handle
+        .download(package_file, "/ota/ota_payload_package.tar.gz", rate)
+        .await;
+    if let Err(_) = result {
+        return SafeCommandResponse {
+            id,
+            command: SafeCommandRx::DownloadOTA,
+            status: -1,
+        };
+    }
+
     SafeCommandResponse {
         id,
         command: SafeCommandRx::DownloadOTA,
