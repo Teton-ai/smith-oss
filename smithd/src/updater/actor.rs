@@ -1,4 +1,3 @@
-use crate::control::update;
 use crate::magic::MagicHandle;
 use crate::shutdown::{ShutdownHandler, ShutdownSignals};
 use crate::utils::network::NetworkClient;
@@ -56,10 +55,10 @@ impl Actor {
     async fn handle_message(&mut self, msg: ActorMessage) {
         match msg {
             ActorMessage::Update => {
-                self.update();
+                self.update().await;
             }
             ActorMessage::Upgrade => {
-                self.upgrade();
+                self.upgrade().await;
             }
             ActorMessage::Checking => {
                 let release_id = self.magic.get_release_id().await;
@@ -70,13 +69,13 @@ impl Actor {
                         "Upgrading from release_id {release_id:?} to target_release_id {target_release_id:?}"
                     );
 
-                    self.update();
+                    self.update().await;
 
                     if matches!(self.last_update, Some(Err(_)) | None) {
                         return;
                     }
 
-                    self.upgrade();
+                    self.upgrade().await;
 
                     if matches!(self.last_upgrade, Some(Err(_)) | None) {
                         return;

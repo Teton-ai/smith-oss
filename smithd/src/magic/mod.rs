@@ -3,7 +3,7 @@ pub mod structure;
 use crate::shutdown::ShutdownSignals;
 use std::path::PathBuf;
 use tokio::sync::{mpsc, oneshot};
-use tracing::{debug, info, warn};
+use tracing::{debug, error, info, warn};
 
 struct Magic {
     shutdown: ShutdownSignals,
