@@ -41,6 +41,9 @@ sqlx = { version = "0.7", features = [
     "chrono",
     "postgres",
 ] }
+tracing-test = "0.2.5"
+tempfile = "3"
+rand = "0.8"
 
 [package.metadata.deb]
 maintainer-scripts = "debian/"
