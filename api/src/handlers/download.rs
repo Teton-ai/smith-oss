@@ -13,6 +13,7 @@ pub struct UploadResult {
 
 #[tracing::instrument]
 pub async fn download_file(
+    device: DeviceWithToken,
     path: Option<Path<String>>,
     Extension(state): Extension<State>,
 ) -> Result<axum::response::Response<Body>, StatusCode> {
