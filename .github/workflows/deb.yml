@@ -59,7 +59,7 @@ jobs:
           package-file: ${{ env.PACKAGE_FILE }}
       - name: Report Status
         if: always()
-        uses: ravsamhq/notify-slack-action@v1
+        uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ job.status }}
           notify_when: 'failure'
