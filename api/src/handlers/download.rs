@@ -1,3 +1,4 @@
+use crate::handlers::DeviceWithToken;
 use crate::{State, storage};
 use axum::Extension;
 use axum::body::Body;
