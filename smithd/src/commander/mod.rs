@@ -1,3 +1,5 @@
+use crate::downloader::DownloaderHandle;
+use crate::filemanager::FileManagerHandle;
 use crate::shutdown::ShutdownSignals;
 use crate::tunnel::TunnelHandle;
 use crate::updater::UpdaterHandle;
@@ -8,6 +10,7 @@ use tracing::info;
 
 mod free;
 mod network;
+mod ota;
 mod restart;
 mod tunnel;
 mod upgrade;
@@ -19,6 +22,8 @@ struct CommandQueueExecutor {
     responses: mpsc::Sender<SafeCommandResponse>,
     tunnel_handle: TunnelHandle,
     updater_handle: UpdaterHandle,
+    downloader_handle: DownloaderHandle,
+    filemanager_handle: FileManagerHandle,
 }
 
 impl CommandQueueExecutor {
@@ -28,6 +33,8 @@ impl CommandQueueExecutor {
         responses: mpsc::Sender<SafeCommandResponse>,
         tunnel_handle: TunnelHandle,
         updater_handle: UpdaterHandle,
+        downloader_handle: DownloaderHandle,
+        filemanager_handle: FileManagerHandle,
     ) -> Self {
         Self {
             shutdown,
@@ -35,6 +42,8 @@ impl CommandQueueExecutor {
             responses,
             tunnel_handle,
             updater_handle,
+            downloader_handle,
+            filemanager_handle,
         }
     }
 
@@ -56,6 +65,25 @@ impl CommandQueueExecutor {
             SafeCommandTx::CloseTunnel => tunnel::close_ssh(action.id, &self.tunnel_handle).await,
             SafeCommandTx::Upgrade => upgrade::upgrade(action.id, &self.updater_handle).await,
             SafeCommandTx::UpdateNetwork { network } => network::execute(action.id, network).await,
+            SafeCommandTx::DownloadOTA {
+                tools,
+                payload,
+                rate,
+            } => {
+                ota::download_ota(
+                    action.id,
+                    &self.downloader_handle,
+                    &self.filemanager_handle,
+                    &tools,
+                    &payload,
+                    rate,
+                )
+                .await
+            }
+            SafeCommandTx::CheckOTAStatus => {
+                ota::check_ota(action.id, &self.downloader_handle).await
+            }
+            SafeCommandTx::StartOTA => ota::start_ota(action.id, &self.filemanager_handle).await,
         }
     }
 
@@ -181,7 +209,13 @@ pub struct CommanderHandle {
 }
 
 impl CommanderHandle {
-    pub fn new(shutdown: ShutdownSignals, tunnel: TunnelHandle, updater: UpdaterHandle) -> Self {
+    pub fn new(
+        shutdown: ShutdownSignals,
+        tunnel: TunnelHandle,
+        updater: UpdaterHandle,
+        downloader: DownloaderHandle,
+        filemanager: FileManagerHandle,
+    ) -> Self {
         let (sender, receiver) = mpsc::channel(10);
         let (command_queue_tx, command_queue_rx) = mpsc::channel(10);
         let (response_queue_tx, response_queue_rx) = mpsc::channel(10);
@@ -197,6 +231,8 @@ impl CommanderHandle {
             response_queue_tx,
             tunnel,
             updater,
+            downloader,
+            filemanager,
         );
         tokio::spawn(async move { actor.run().await });
         tokio::spawn(async move { actor2.run().await });

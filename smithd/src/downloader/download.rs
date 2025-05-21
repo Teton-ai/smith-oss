@@ -44,17 +44,12 @@ impl Default for DownloadStats {
 
 pub async fn download_package(
     magic: MagicHandle,
-
     remote_file: String,
-
     local_file: String,
-
     rate: f64,
-
     force_stop: Arc<AtomicBool>,
 ) -> anyhow::Result<String> {
     // Convert the MB rate to bytes/sec
-
     let bytes_per_second = (rate * 1_000_000.0) as u64;
 
     info!("Rate limit: {} bytes/sec", bytes_per_second);
@@ -162,7 +157,6 @@ async fn download_file(
     }
 
     // Get the total content length of the object
-
     let content_length = response
         .headers()
         .get("Content-Length")
@@ -170,7 +164,6 @@ async fn download_file(
         .and_then(|value| value.parse::<u64>().ok());
 
     // Create root path if it does not exist
-
     if let Some(parent) = Path::new(local_path).parent() {
         if !parent.exists() {
             fs::create_dir_all(parent).await?;
@@ -178,7 +171,6 @@ async fn download_file(
     }
 
     // Open the file for writing
-
     let mut file = tokio::fs::File::create(local_path).await?;
 
     let quota = Quota::per_second(
@@ -186,15 +178,11 @@ async fn download_file(
     );
 
     let limiter = RateLimiter::direct(quota);
-
     let mut stream = response.bytes_stream();
-
     let mut downloaded: u64 = 0;
-
     let start = std::time::Instant::now();
 
     // Force rate limiter to start empty so we don't have a large burst when starting download
-
     let max_burst = bytes_per_second as u32;
 
     match limiter.check_n(NonZeroU32::new(max_burst).unwrap()) {
@@ -219,13 +207,11 @@ async fn download_file(
                 let chunk_size = NonZeroU32::new(chunk.len() as u32).unwrap();
 
                 // Wait for rate limiter
-
                 if let Err(e) = limiter.until_n_ready(chunk_size).await {
                     eprintln!("Rate limit exceeded: {}", e);
                 }
 
                 // Write chunk to file
-
                 file.write_all(&chunk).await?;
 
                 downloaded += chunk.len() as u64;
@@ -300,6 +286,7 @@ async fn download_file(
             error!("Failed to verify file size on disk: {}", e);
 
             stats.error_message = Some(format!("Failed to verify file size on disk: {}", e));
+            return Err(anyhow::anyhow!("Failed to verify file size on disk: {}", e));
         }
     }
 

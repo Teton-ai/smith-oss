@@ -12,6 +12,26 @@ use tokio::{
 };
 use tracing::info;
 
+#[derive(Debug)]
+enum DownloaderMessage {
+    Download {
+        remote_file: String,
+        local_file: String,
+        rate: f64,
+        rpc: oneshot::Sender<anyhow::Result<String>>,
+    },
+    CheckStatus {
+        rpc: oneshot::Sender<anyhow::Result<DownloadingStatus>>,
+    },
+}
+
+#[derive(Debug)]
+pub enum DownloadingStatus {
+    Failed,
+    Downloading,
+    Success,
+}
+
 struct Downloader {
     shutdown: ShutdownSignals,
     receiver: mpsc::Receiver<DownloaderMessage>,
@@ -19,53 +39,31 @@ struct Downloader {
     is_downloading: Arc<AtomicBool>,
     network: NetworkClient,
     force_stop: Arc<AtomicBool>,
+    last_download_status: Arc<AtomicBool>,
     timeout: u64,
-}
-
-#[derive(Debug)]
-
-enum DownloaderMessage {
-    Download {
-        remote_file: String,
-
-        local_file: String,
-
-        rate: f64,
-
-        rpc: oneshot::Sender<anyhow::Result<String>>,
-    },
 }
 
 impl Downloader {
     fn new(
         shutdown: ShutdownSignals,
-
         receiver: mpsc::Receiver<DownloaderMessage>,
-
         magic: MagicHandle,
-
         timeout: u64,
     ) -> Self {
         let network = NetworkClient::new();
-
         let force_stop = Arc::new(AtomicBool::new(false));
-
         let is_downloading = Arc::new(AtomicBool::new(false));
+        let last_download_status = Arc::new(AtomicBool::new(false));
 
         Self {
             shutdown,
-
             receiver,
-
             magic,
-
             network,
-
             is_downloading,
-
             force_stop,
-
             timeout,
+            last_download_status,
         }
     }
 
@@ -73,35 +71,47 @@ impl Downloader {
         match msg {
             DownloaderMessage::Download {
                 remote_file,
-
                 local_file,
-
                 rate,
-
                 rpc,
             } => {
                 self.is_downloading.store(true, Ordering::SeqCst);
 
                 let magic = self.magic.clone();
-
                 let force_stop = self.force_stop.clone();
-
                 let is_downloading = self.is_downloading.clone();
+                let last_download_status = self.last_download_status.clone();
 
                 tokio::spawn(async move {
                     // Do the download
-
                     let result =
                         download_package(magic, remote_file, local_file, rate, force_stop).await;
 
-                    // Send the result back
+                    if let Ok(_) = &result {
+                        last_download_status.store(true, Ordering::SeqCst);
+                    } else {
+                        last_download_status.store(false, Ordering::SeqCst);
+                    }
 
+                    // Send the result back
                     let _ = rpc.send(result);
 
                     // Reset status
-
                     is_downloading.store(false, Ordering::SeqCst);
                 });
+            }
+            DownloaderMessage::CheckStatus { rpc } => {
+                // Check if the thread is currently downloading
+                let mut status = DownloadingStatus::Failed;
+                if self.is_downloading.load(Ordering::SeqCst) {
+                    status = DownloadingStatus::Downloading;
+                } else {
+                    if self.last_download_status.load(Ordering::SeqCst) {
+                        status = DownloadingStatus::Success;
+                    }
+                }
+
+                let _ = rpc.send(Ok(status));
             }
         }
     }
@@ -115,71 +125,29 @@ impl Downloader {
 
         loop {
             tokio::select! {
-
-
                 Some(msg) = self.receiver.recv() => {
-
-
                     info!("Received message: {:?}", msg);
-
-
                     self.handle_message(msg).await;
-
-
                 }
-
 
                 _ = self.shutdown.token.cancelled() => {
-
-
                     let mut count = 1;
 
-
                     loop {
-
-
                         if !self.is_downloading.load(Ordering::SeqCst) {
-
-
                             break;
-
-
                         } else {
-
-
                             info!("Waiting for download task to finish");
-
-
                             time::sleep(time::Duration::from_secs(1)).await;
-
-
                             if count > self.timeout {
-
-
                                 self.force_stop.store(true, Ordering::SeqCst);
-
-
                             }
-
-
                             count += 1;
-
-
                         }
-
-
                     }
-
-
                     info!("Download task shutting down gracefully");
-
-
                     break;
-
-
                 }
-
-
             }
         }
     }
@@ -206,27 +174,32 @@ impl DownloaderHandle {
 
     pub async fn download(
         &self,
-
         remote_file: &str,
-
         local_file: &str,
-
         rate: f64,
     ) -> anyhow::Result<String> {
         // unwrap because if this fails then we are in a bad state
-
-        let (rpc, receiver) = oneshot::channel();
+        let (rpc, _) = oneshot::channel();
 
         self.sender
             .send(DownloaderMessage::Download {
                 remote_file: remote_file.to_string(),
-
                 local_file: local_file.to_string(),
-
                 rate,
-
                 rpc,
             })
+            .await
+            .unwrap();
+
+        Ok("Download started, not waiting for result".to_string())
+    }
+
+    pub async fn check_download_status(&self) -> anyhow::Result<DownloadingStatus> {
+        // unwrap because if this fails then we are in a bad state
+        let (rpc, receiver) = oneshot::channel();
+
+        self.sender
+            .send(DownloaderMessage::CheckStatus { rpc })
             .await
             .unwrap();
 

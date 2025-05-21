@@ -79,6 +79,10 @@ pub enum SafeCommandRx {
         stdout: String,
         stderr: String,
     },
+    DownloadOTA,
+    CheckOTAStatus {
+        status: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -107,6 +111,13 @@ pub enum SafeCommandTx {
     UpdateVariables {
         variables: HashMap<String, String>,
     },
+    DownloadOTA {
+        tools: String,
+        payload: String,
+        rate: f64,
+    },
+    CheckOTAStatus,
+    StartOTA,
 }
 
 // RESPONSE THAT IT GETS
