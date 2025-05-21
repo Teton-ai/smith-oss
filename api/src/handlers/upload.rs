@@ -1,5 +1,6 @@
 use crate::State;
 use crate::asset::Asset;
+use crate::handlers::DeviceWithToken;
 use axum::extract::{Multipart, Path};
 use axum::http::StatusCode;
 use axum::{Extension, Json};
