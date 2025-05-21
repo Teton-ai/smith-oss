@@ -41,6 +41,14 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs/book
+      - name: Report Status
+        if: always()
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SMITH_TEAM_SLACK_NOTIFICATIONS }}
 
   deploy:
     environment:
@@ -52,3 +60,11 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Report Status
+        if: always()
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SMITH_TEAM_SLACK_NOTIFICATIONS }}
