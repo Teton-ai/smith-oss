@@ -77,6 +77,8 @@ jobs:
           base: main
           labels: automated,release
           delete-branch: true
+          author: 'teton-bot <bot@teton.ai>'
+          committer: 'teton-bot <bot@teton.ai>'
 
   create-release:
     runs-on: ubuntu-latest
