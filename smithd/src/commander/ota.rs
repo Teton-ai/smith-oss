@@ -70,20 +70,41 @@ pub(super) async fn start_ota(id: i32, file_handle: &FileManagerHandle) -> SafeC
         OTAConstants::OTA_STORAGE,
         OTAConstants::PACKAGE_FILE
     );
-    let arguments: Vec<String> = vec![local_file];
-    match file_handle
-        .execute_script(
-            "nv_ota_start.sh",
-            arguments,
-            Some(OTAConstants::OTA_SCRIPT_DIR),
-        )
-        .await
-    {
+    let file = format!(
+        "{}/{}",
+        OTAConstants::TOOLS_STORAGE,
+        OTAConstants::TOOLS_FILE
+    );
+    match file_handle.extract_here(file.as_str()).await {
         Ok(_) => {
-            let arguments: Vec<String> = Vec::new();
-            let _ = file_handle
-                .execute_system_command("reboot", arguments, None)
-                .await;
+            let arguments: Vec<String> = vec![local_file];
+            match file_handle
+                .execute_script(
+                    "nv_ota_start.sh",
+                    arguments,
+                    Some(OTAConstants::OTA_SCRIPT_DIR),
+                )
+                .await
+            {
+                Ok(_) => {
+                    // Spawn a thread to reboot the device after a short delay to return success first
+                    let file_handle_clone = file_handle.clone();
+                    tokio::spawn(async move {
+                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+                        let arguments: Vec<String> = Vec::new();
+                        let _ = file_handle_clone
+                            .execute_system_command("reboot", arguments, None)
+                            .await;
+                    });
+                }
+                Err(_) => {
+                    return SafeCommandResponse {
+                        id,
+                        command: SafeCommandRx::DownloadOTA,
+                        status: -1,
+                    };
+                }
+            }
         }
         Err(_) => {
             return SafeCommandResponse {
