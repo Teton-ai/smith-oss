@@ -1,0 +1,40 @@
+name: test.yml
+on:
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain via rust-toolchain.toml
+        uses: dsherret/rust-toolchain-file@v1
+
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+
+      - name: SQLx offline
+        run: echo "SQLX_OFFLINE=true" > .env
+
+      - name: Install SQLx CLI
+        run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Check SQLx
+        working-directory: api
+        run: cargo sqlx prepare --check
+
+      - name: Run tests
+        run: cargo test --workspace
