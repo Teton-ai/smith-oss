@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 mod download;
 use crate::magic::MagicHandle;
 use crate::shutdown::ShutdownSignals;
@@ -18,7 +18,6 @@ enum DownloaderMessage {
         remote_file: String,
         local_file: String,
         rate: f64,
-        rpc: oneshot::Sender<anyhow::Result<String>>,
     },
     CheckStatus {
         rpc: oneshot::Sender<anyhow::Result<DownloadingStatus>>,
@@ -36,7 +35,7 @@ struct Downloader {
     shutdown: ShutdownSignals,
     receiver: mpsc::Receiver<DownloaderMessage>,
     magic: MagicHandle,
-    is_downloading: Arc<AtomicBool>,
+    is_downloading: Arc<AtomicUsize>,
     network: NetworkClient,
     force_stop: Arc<AtomicBool>,
     last_download_status: Arc<AtomicBool>,
@@ -52,7 +51,7 @@ impl Downloader {
     ) -> Self {
         let network = NetworkClient::new();
         let force_stop = Arc::new(AtomicBool::new(false));
-        let is_downloading = Arc::new(AtomicBool::new(false));
+        let is_downloading = Arc::new(AtomicUsize::new(0));
         let last_download_status = Arc::new(AtomicBool::new(false));
 
         Self {
@@ -73,9 +72,8 @@ impl Downloader {
                 remote_file,
                 local_file,
                 rate,
-                rpc,
             } => {
-                self.is_downloading.store(true, Ordering::SeqCst);
+                self.is_downloading.fetch_add(1, Ordering::SeqCst);
 
                 let magic = self.magic.clone();
                 let force_stop = self.force_stop.clone();
@@ -93,17 +91,14 @@ impl Downloader {
                         last_download_status.store(false, Ordering::SeqCst);
                     }
 
-                    // Send the result back
-                    let _ = rpc.send(result);
-
                     // Reset status
-                    is_downloading.store(false, Ordering::SeqCst);
+                    is_downloading.fetch_sub(1, Ordering::SeqCst);
                 });
             }
             DownloaderMessage::CheckStatus { rpc } => {
                 // Check if the thread is currently downloading
                 let mut status = DownloadingStatus::Failed;
-                if self.is_downloading.load(Ordering::SeqCst) {
+                if self.is_downloading.load(Ordering::SeqCst) > 0 {
                     status = DownloadingStatus::Downloading;
                 } else {
                     if self.last_download_status.load(Ordering::SeqCst) {
@@ -134,7 +129,7 @@ impl Downloader {
                     let mut count = 1;
 
                     loop {
-                        if !self.is_downloading.load(Ordering::SeqCst) {
+                        if !self.is_downloading.load(Ordering::SeqCst) > 0 {
                             break;
                         } else {
                             info!("Waiting for download task to finish");
@@ -179,14 +174,11 @@ impl DownloaderHandle {
         rate: f64,
     ) -> anyhow::Result<String> {
         // unwrap because if this fails then we are in a bad state
-        let (rpc, _) = oneshot::channel();
-
         self.sender
             .send(DownloaderMessage::Download {
                 remote_file: remote_file.to_string(),
                 local_file: local_file.to_string(),
                 rate,
-                rpc,
             })
             .await
             .unwrap();
