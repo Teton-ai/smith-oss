@@ -1,4 +1,4 @@
-name: test.yml
+name: test
 on:
   pull_request:
     branches: [ main ]
