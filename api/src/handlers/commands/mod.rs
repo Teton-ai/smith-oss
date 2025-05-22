@@ -35,8 +35,8 @@ pub async fn get_commands() -> Result<Json<Vec<SafeCommandTx>>, StatusCode> {
             payload: "ota_payload_package.tar.gz".to_string(),
             rate: 1.0,
         },
-        SafeCommandTx::StartOTA,
         SafeCommandTx::CheckOTAStatus,
+        SafeCommandTx::StartOTA,
     ];
 
     Ok(Json(commands))

@@ -1,3 +1,5 @@
+use tracing::warn;
+
 use crate::downloader::{DownloaderHandle, DownloadingStatus};
 use crate::filemanager::FileManagerHandle;
 use crate::utils::schema::{SafeCommandResponse, SafeCommandRx};
@@ -63,8 +65,6 @@ pub(super) async fn download_ota(
 }
 
 pub(super) async fn start_ota(id: i32, file_handle: &FileManagerHandle) -> SafeCommandResponse {
-    // TODO: Think about adding its own response here?
-    // The function will auto restart the device so I don't think we will ever see this
     let local_file = format!(
         "{}/{}",
         OTAConstants::OTA_STORAGE,
@@ -102,32 +102,52 @@ pub(super) async fn start_ota(id: i32, file_handle: &FileManagerHandle) -> SafeC
 }
 
 pub(super) async fn check_ota(id: i32, download_handle: &DownloaderHandle) -> SafeCommandResponse {
+    warn!("Received check download status message");
     let result = download_handle.check_download_status().await;
+    warn!("Do we return from the check function?");
     let result_unwrapped = match result {
         Ok(result) => result,
         Err(_) => {
             return SafeCommandResponse {
                 id,
                 command: SafeCommandRx::CheckOTAStatus {
-                    status: "Error".to_string(),
+                    status: "Error checking download status".to_string(),
                 },
                 status: -1,
             };
         }
     };
 
-    let status;
     match result_unwrapped {
-        DownloadingStatus::Failed => status = "Failed",
-        DownloadingStatus::Downloading => status = "Downloading",
-        DownloadingStatus::Success => status = "Success",
-    }
-
-    SafeCommandResponse {
-        id,
-        command: SafeCommandRx::CheckOTAStatus {
-            status: status.to_string(),
-        },
-        status: 0,
+        DownloadingStatus::Failed => {
+            let status = "Failed";
+            return SafeCommandResponse {
+                id,
+                command: SafeCommandRx::CheckOTAStatus {
+                    status: status.to_string(),
+                },
+                status: -1,
+            };
+        }
+        DownloadingStatus::Downloading => {
+            let status = "Downloading";
+            return SafeCommandResponse {
+                id,
+                command: SafeCommandRx::CheckOTAStatus {
+                    status: status.to_string(),
+                },
+                status: -1,
+            };
+        }
+        DownloadingStatus::Success => {
+            let status = "Success";
+            return SafeCommandResponse {
+                id,
+                command: SafeCommandRx::CheckOTAStatus {
+                    status: status.to_string(),
+                },
+                status: 0,
+            };
+        }
     }
 }
